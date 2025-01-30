@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "Ollama Chat",
+    "name": "Browserllama",
     "version": "1.0",
-    "description": "Chat with your local Ollama instance from Chrome!",
+    "description": "Chat with your local Ollama instance and LLM models from Chrome!",
     "permissions": [
         "contextMenus",
         "storage",
