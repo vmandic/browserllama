@@ -25,7 +25,7 @@ A chrome extension for integrating a local running Ollama server into your brows
 
 - Download the code and load it manually into chrome extensions (chrome://extensions/)
 - Make sure your Ollama server is running and accessible at `http://localhost:11434/api/generate`
-- You can also run CLI `ollama serve` to start the server (instead of running the actual application), but make sure you set up the environment variables for the server to run, i.e. to allow CORS for chrome-extension://[ID] (you can find out the ID after you install the extension), for example I added these to my .bashrc file:
+- You can also run CLI `ollama serve` to start the server (instead of running the actual application), but make sure you set up the environment variables for the server to run, i.e. to allow CORS for chrome-extension://[ID] (you can find out the ID after you install the extension), for example I added these to my .bashrc file (more info [here on this github issue](https://github.com/ollama/ollama/issues/6489)):
 
 ```bashrc
 export OLLAMA_ALLOW_ORIGINS=chrome-extension://moemjknfmlpkgamlcdnmpobaakdpindc
