@@ -11,7 +11,7 @@
         "notifications"
     ],
     "host_permissions": [
-        "http://localhost:11434/api/*"
+        "<all_urls>"
     ],
     "action": {
       "default_popup": "popup.html",
