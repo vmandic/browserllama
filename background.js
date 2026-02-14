@@ -95,22 +95,22 @@ chrome.runtime.onInstalled.addListener(() => {
     });
 });
 
-// Handle context menu clicks
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-    if (info.menuItemId === "sendToBrowserllama") {
-        const selectedText = info.selectionText;
-        if (!selectedText) return;
-
-        const aiResponse = await queryOllama(selectedText);
-
-        chrome.notifications.create({
-            type: "basic",
-            iconUrl: "icons/android-chrome-192x192.png",
-            title: "Browserllama Response",
-            message: aiResponse || "No response received."
-        });
-    }
+// Add selection listener
+chrome.tabs.onActivated.addListener((activeInfo) => {
+    chrome.scripting.executeScript({
+        target: { tabId: activeInfo.tabId },
+        function: addSelectionListener,
+    }).catch(console.error);
 });
+
+function addSelectionListener() {
+    document.addEventListener('selectionchange', () => {
+        const selectedText = window.getSelection().toString().trim();
+        if (selectedText) {
+            chrome.storage.local.set({ 'tempSelectedText': selectedText });
+        }
+    });
+}
 
 // Check status every 10 seconds
 setInterval(() => {

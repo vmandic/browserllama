@@ -39,6 +39,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Check for selected text from context menu
+    chrome.storage.local.get(['tempSelectedText'], function(result) {
+        if (result.tempSelectedText) {
+            // Set the text in the input field
+            document.getElementById("userInput").value = result.tempSelectedText;
+            // Clear the stored text
+            chrome.storage.local.remove('tempSelectedText');
+        }
+    });
+
     // Add send button click handler
     document.getElementById("sendButton").addEventListener("click", async () => {
         const userInput = document.getElementById("userInput").value;
