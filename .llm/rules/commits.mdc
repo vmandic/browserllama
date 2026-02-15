@@ -9,8 +9,9 @@ This rule defines how to organize changed code into meaningful commits and how t
 ## Commit title
 
 - **Length:** Up to **75 characters** (including the type prefix).
-- **Format:** Always start the title with a **type** followed by a colon and a space, then a short, imperative summary.
-  - Pattern: `type: summary` (e.g. `feat: add model selector to popup`).
+- **Format:** Start the title with either:
+  - **Type only:** `type: summary` (e.g. `feat: add model selector to popup`)
+  - **Task-scoped type:** `type-id: summary` (e.g. `feat-1: improve popup first-load UX`)
 
 ## Allowed types
 
@@ -25,6 +26,11 @@ Use exactly one of these prefixes (lowercase):
 - **tech** – Technical or internal change (e.g. scripts, CI, build).
 - **docs** – Documentation only (README, AGENTS.md, comments, .llm rules).
 
+Task-scoped IDs:
+- You may append a task number to any allowed type using `-<number>`.
+- Example: `feat-1: ...`, `chore-2: ...`, `docs-3: ...`.
+- Task numbers are plain integers (no zero-padding).
+
 ## Organizing changes into commits
 
 - **One logical change per commit.** Group edits that belong together (e.g. one fix and its test, one small feature).
@@ -35,6 +41,7 @@ Use exactly one of these prefixes (lowercase):
 ## Title examples
 
 - `feat: add Enter key to send message from popup`
+- `feat-1: improve popup first-load UX`
 - `fix: return true in onMessage when using async sendResponse`
 - `refactor: move Ollama payload build into src/lib/ollama.js`
 - `chore: add vitest and playwright configs`

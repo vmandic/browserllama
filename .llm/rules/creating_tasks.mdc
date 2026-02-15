@@ -30,22 +30,22 @@ If a task directory package is used:
 
 ## Filename Convention
 Task files must use these filename templates:
-- `bugfix-00001_<title>.md`
-- `feat-00001_<title>.md`
-- `chore-00001_<title>.md`
-- `llm-00001_<title>.md`
-- `tech-00001_<title>.md`
+- `bugfix-1_<title>.md`
+- `feat-1_<title>.md`
+- `chore-1_<title>.md`
+- `llm-1_<title>.md`
+- `tech-1_<title>.md`
 
 Task directories must use these directory name templates:
-- `bugfix-00001_<title>/`
-- `feat-00001_<title>/`
-- `chore-00001_<title>/`
-- `llm-00001_<title>/`
-- `tech-00001_<title>/`
+- `bugfix-1_<title>/`
+- `feat-1_<title>/`
+- `chore-1_<title>/`
+- `llm-1_<title>/`
+- `tech-1_<title>/`
 
 Rules:
 - Use only the mapped prefix for the selected task type.
-- Use a 5-digit, zero-padded number (`00001`, `00002`, ...).
+- Use a positive integer number (`1`, `2`, ...); no zero-padding.
 - Add a short title segment after the number.
 - Title segment must be lowercase with words separated by underscores.
 - Title segment must be at most 6 words.
@@ -142,6 +142,7 @@ Fix popup status indicator encoding
 - [ ] Include file-level targets for each todo when possible.
 - [ ] Mark validation tasks required to satisfy `# Definition of Done`.
 - [ ] Keep checklist task-specific (do not use only generic wording).
+- [ ] Check test coverage, run tests,
 ```
 
 ## Creation Workflow
@@ -149,7 +150,7 @@ Fix popup status indicator encoding
 2. Map the type to directory and prefix using the table above.
 3. Choose storage format: single Markdown file or task directory package.
 4. Find existing files and directories with that prefix in that directory.
-5. Pick the next available 5-digit number.
+5. Pick the next available integer number.
 6. Define a concise title of up to 6 words.
 7. Convert the title to lowercase underscore format for filename suffix.
 8. Create either:
@@ -172,11 +173,16 @@ Fix popup status indicator encoding
 - For bugs, `# How to reproduce` should include deterministic repro steps.
 - Do not add a manual "last edited" field; use git history as the source of truth for task edits.
 
+## Security and Path Rules
+- Never include absolute local filesystem paths in task files.
+- Use repository-root-relative paths only (for example: `src/popup.html`, `tasks/feats/feat-1_initial_ui_ux_improvements.md`).
+- Do not include user home paths, machine-specific paths, or OS-specific absolute roots (for example: `/absolute/path/...`, `D:\absolute\path\...`).
+
 ## Validation Checklist
 - File is in the correct `tasks/<type>/` directory.
 - Task is either:
-  - file: `<prefix>-NNNNN_<title>.md`, or
-  - directory: `<prefix>-NNNNN_<title>/README.md` exists.
+  - file: `<prefix>-N_<title>.md`, or
+  - directory: `<prefix>-N_<title>/README.md` exists.
 - Filename title suffix uses lowercase words separated by underscores and is at most 6 words.
 - Number is the next available for that prefix.
 - `# Created at (UTC)` exists and is a valid ISO 8601 UTC timestamp.
@@ -185,3 +191,4 @@ Fix popup status indicator encoding
 - Bug tasks include `# How to reproduce` before `# How`.
 - `# LLM context checklist` exists and includes context-gather + context-recheck + git-history checks.
 - `# LLM implementation checklist` exists and includes task-specific implementation todos.
+- No absolute local filesystem paths are present; only repo-relative paths are used.
