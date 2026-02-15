@@ -25,7 +25,6 @@
         body {
             margin: 0;
             width: 360px;
-            min-height: 460px;
             padding: 14px;
             background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 100%);
             color: var(--text);
@@ -41,7 +40,6 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            min-height: 430px;
         }
 
         .header {
@@ -165,6 +163,29 @@
             flex: 1;
         }
 
+        .compose-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .is-hidden {
+            display: none !important;
+        }
+
+        .secondary-button {
+            margin-top: 0;
+            background: #ffffff;
+            color: var(--accent);
+            border-color: var(--border);
+        }
+
+        .secondary-button:hover:not(:disabled) {
+            background: #f0f6ff;
+            border-color: #b8cae6;
+        }
+
+        #lastPrompt,
         #response {
             margin: 0;
             min-height: 88px;
@@ -181,6 +202,12 @@
             font-size: 13px;
         }
 
+        #lastPrompt {
+            min-height: 56px;
+            max-height: 126px;
+        }
+
+        #lastPrompt.is-placeholder,
         #response.is-placeholder {
             color: var(--muted);
         }
@@ -197,33 +224,46 @@
     <main class="popup">
         <header class="header">
             <h1 class="title">Browserllama</h1>
-            <p class="subtitle">Local Ollama Chat</p>
+            <p class="subtitle">Local AI Chat</p>
         </header>
 
         <section id="status" class="status" aria-live="polite">
             <span id="statusIndicator" class="status-dot" aria-hidden="true"></span>
-            <span id="statusText">Checking Ollama status...</span>
+            <span id="statusText">Checking provider status...</span>
         </section>
 
-        <div class="field">
-            <label class="label" for="userInput">Prompt</label>
-            <textarea id="userInput" placeholder="Ask something about the current page..."></textarea>
+        <div id="composeWrap" class="compose-wrap">
+            <div class="field">
+                <label class="label" for="userInput">Prompt</label>
+                <textarea id="userInput" placeholder="Ask something about the current page..."></textarea>
+            </div>
+
+            <div class="field">
+                <label class="label" for="providerSelect">Provider</label>
+                <select id="providerSelect">
+                    <option value="ollama">Ollama</option>
+                    <option value="chromeBuiltIn">Chrome built-in AI</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label class="label" for="modelSelect">Model</label>
+                <select id="modelSelect">
+                    <option value="deepseek-r1:8b">DeepSeek 8B</option>
+                    <option value="deepseek-r1:1.5b">DeepSeek 1.5B</option>
+                    <option value="qwen2.5:7b-16k">qwen2.5 7B (16k context)</option>
+                </select>
+            </div>
+
+            <button id="sendButton" type="button">Send</button>
         </div>
 
-        <div class="field">
-            <label class="label" for="modelSelect">Model</label>
-            <select id="modelSelect">
-                <option value="deepseek-r1:8b">DeepSeek 8B</option>
-                <option value="deepseek-r1:1.5b">DeepSeek 1.5B</option>
-                <option value="qwen2.5:7b-16k">qwen2.5 7B (16k context)</option>
-            </select>
-        </div>
-
-        <button id="sendButton" type="button">Send</button>
-
-        <div class="response-wrap">
+        <div id="responseWrap" class="response-wrap is-hidden">
+            <span class="label">Last prompt</span>
+            <pre id="lastPrompt" class="is-placeholder">No prompt sent yet.</pre>
             <span class="label">Response</span>
             <pre id="response" class="is-placeholder">Response will appear here.</pre>
+            <button id="newPromptButton" class="secondary-button is-hidden" type="button">New prompt</button>
         </div>
     </main>
     <script src="lib/ollama.js"></script>

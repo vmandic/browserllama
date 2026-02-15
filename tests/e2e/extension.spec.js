@@ -70,6 +70,13 @@ test("answers questions based on current page content", async () => {
   );
   await popup.locator("#sendButton").click();
   await expect(popup.locator("#response")).toHaveText("YES", { timeout: 10000 });
+  await expect(popup.locator("#lastPrompt")).toContainText(
+    "can you tell me if the current page you see defines only lorem ipsum text"
+  );
+  await expect(popup.locator("#newPromptButton")).toBeVisible();
+
+  await popup.locator("#newPromptButton").click();
+  await expect(popup.locator("#sendButton")).toBeVisible();
 
   await popup.locator("#userInput").fill(
     'can you count the amount of paragraphs of lorem ipsum text in the current page, answer only with a precise number such as "1, 2 or 5" for example, if not answer "I can not answer that."'
