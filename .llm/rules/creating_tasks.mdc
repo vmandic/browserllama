@@ -18,16 +18,19 @@ Use this exact task-type mapping:
 | Tech | `tasks/tech/` | `tech-` |
 
 ## Filename Convention
-Task files must use these exact filename templates:
-- `bugfix-00001.md`
-- `feat-00001.md`
-- `chore-00001.md`
-- `llm-00001.md`
-- `tech-00001.md`
+Task files must use these filename templates:
+- `bugfix-00001_<title>.md`
+- `feat-00001_<title>.md`
+- `chore-00001_<title>.md`
+- `llm-00001_<title>.md`
+- `tech-00001_<title>.md`
 
 Rules:
 - Use only the mapped prefix for the selected task type.
 - Use a 5-digit, zero-padded number (`00001`, `00002`, ...).
+- Add a short title segment after the number.
+- Title segment must be lowercase with words separated by underscores.
+- Title segment must be at most 6 words.
 - Keep the `.md` extension.
 - Do not add suffixes, extra words, or dates in the filename.
 
@@ -39,6 +42,7 @@ Sequence rules:
 ## File Content Template
 All task files are Markdown files and must include these sections:
 
+- `# Title`
 - `# What`
 - `# Why`
 - `# How`
@@ -48,9 +52,13 @@ Bug task exception:
 - Bug task files must include `# How to reproduce`.
 - For bug tasks, include `# How to reproduce` before `# How`.
 - Heading names must match exactly (same spelling and capitalization).
+- The `# Title` value must match the filename title segment in human-readable form.
 
 ## Standard Template (feat/chore/llm/tech)
 ```markdown
+# Title
+Initial UI and UX improvements
+
 # What
 
 # Why
@@ -62,6 +70,9 @@ Bug task exception:
 
 ## Bug Template
 ```markdown
+# Title
+Fix popup status indicator encoding
+
 # What
 
 # Why
@@ -78,12 +89,15 @@ Bug task exception:
 2. Map the type to directory and prefix using the table above.
 3. Find existing files with that prefix in that directory.
 4. Pick the next available 5-digit number.
-5. Create `<prefix><number>.md` in that directory.
-6. Fill required headings using the correct template.
-7. If type is bug, include `# How to reproduce` before `# How`.
+5. Define a concise title of up to 6 words.
+6. Convert the title to lowercase underscore format for filename suffix.
+7. Create `<prefix><number>_<title>.md` in that directory.
+8. Fill required headings using the correct template.
+9. If type is bug, include `# How to reproduce` before `# How`.
 
 ## Writing Guidelines
 - Keep content concise and actionable.
+- `# Title`: short human-readable task title matching the filename suffix.
 - `# What`: state the change clearly.
 - `# Why`: explain expected value or problem solved.
 - `# How`: list implementation steps in execution order.
@@ -92,7 +106,9 @@ Bug task exception:
 
 ## Validation Checklist
 - File is in the correct `tasks/<type>/` directory.
-- Filename exactly matches `<prefix>-NNNNN.md`.
+- Filename exactly matches `<prefix>-NNNNN_<title>.md`.
+- Filename title suffix uses lowercase words separated by underscores and is at most 6 words.
 - Number is the next available for that prefix.
+- `# Title` heading exists and matches the filename title in readable form.
 - Required headings exist exactly as defined.
 - Bug tasks include `# How to reproduce` before `# How`.
