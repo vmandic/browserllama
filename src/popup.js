@@ -1,15 +1,14 @@
-// Helper function with hardcoded address
 function getServerAddress() {
     return Browserllama.getDefaultServer();
 }
 
 function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function getActivePageDataWithRetry(maxAttempts = 3) {
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-        const pageData = await new Promise(resolve => {
+        const pageData = await new Promise((resolve) => {
             chrome.runtime.sendMessage({ action: "getActivePageText" }, function(response) {
                 if (response && response.success) {
                     resolve(response.data || { text: "", paragraphs: [] });
@@ -34,75 +33,89 @@ async function getActivePageDataWithRetry(maxAttempts = 3) {
 }
 
 async function isE2EModeEnabled() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
         chrome.storage.local.get(["e2eMode"], (result) => {
             resolve(Boolean(result.e2eMode));
         });
     });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Create and add status div
-    const statusDiv = document.createElement('div');
-    statusDiv.id = 'status';
-    statusDiv.style.padding = '5px';
-    statusDiv.style.marginBottom = '10px';
-    document.body.insertBefore(statusDiv, document.body.firstChild);
+function setStatus(statusDiv, statusText, isRunning) {
+    statusDiv.classList.remove("is-online", "is-offline");
+    if (isRunning === true) {
+        statusDiv.classList.add("is-online");
+        statusText.textContent = "Connected to Ollama";
+        return;
+    }
+    statusDiv.classList.add("is-offline");
+    statusText.textContent = "Ollama is not reachable";
+}
 
-    const modelSelect = document.getElementById('modelSelect');
+function setResponse(responseDiv, text, isPlaceholder = false) {
+    responseDiv.textContent = text;
+    responseDiv.classList.toggle("is-placeholder", isPlaceholder);
+    responseDiv.scrollTop = 0;
+}
 
-    // Load model preference
-    chrome.storage.sync.get(['preferredModel'], function(result) {
+function setSendingState(sendButton, isSending) {
+    sendButton.disabled = isSending;
+    sendButton.textContent = isSending ? "Sending..." : "Send";
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const statusDiv = document.getElementById("status");
+    const statusText = document.getElementById("statusText");
+    const modelSelect = document.getElementById("modelSelect");
+    const userInput = document.getElementById("userInput");
+    const sendButton = document.getElementById("sendButton");
+    const responseDiv = document.getElementById("response");
+
+    chrome.storage.sync.get(["preferredModel"], function(result) {
         if (result.preferredModel) {
             modelSelect.value = result.preferredModel;
         }
     });
 
-    // Save model preference
-    modelSelect.addEventListener('change', function() {
+    modelSelect.addEventListener("change", function() {
         chrome.storage.sync.set({
             preferredModel: modelSelect.value
         });
     });
 
-    // Check Ollama status
     chrome.runtime.sendMessage({
         action: "getOllamaStatus",
         server: getServerAddress()
     }, function(response) {
-        if (response) {
-            statusDiv.innerHTML = response.isRunning ? 
-                '🟢 Ollama is running' : 
-                '🔴 Ollama is not running';
+        if (!response || typeof response.isRunning !== "boolean") {
+            setStatus(statusDiv, statusText, false);
+            return;
         }
+        setStatus(statusDiv, statusText, response.isRunning);
     });
 
-    // Check for selected text from context menu
-    chrome.storage.local.get(['tempSelectedText'], function(result) {
+    chrome.storage.local.get(["tempSelectedText"], function(result) {
         if (result.tempSelectedText) {
-            // Set the text in the input field
-            document.getElementById("userInput").value = result.tempSelectedText;
-            // Clear the stored text
-            chrome.storage.local.remove('tempSelectedText');
+            userInput.value = result.tempSelectedText;
+            chrome.storage.local.remove("tempSelectedText");
         }
     });
 
-    // Add send button click handler
-    document.getElementById("sendButton").addEventListener("click", async () => {
-        const userInput = document.getElementById("userInput").value;
-        if (!userInput) return;
-
-        const responseDiv = document.getElementById("response");
-        responseDiv.innerText = "Thinking...";
+    sendButton.addEventListener("click", async () => {
+        const prompt = userInput.value.trim();
+        if (!prompt || sendButton.disabled) {
+            return;
+        }
+        setSendingState(sendButton, true);
+        setResponse(responseDiv, "Thinking...", true);
 
         try {
-            const model = document.getElementById("modelSelect").value;
+            const model = modelSelect.value;
             const pageData = await getActivePageDataWithRetry();
             const pageText = pageData.text || "";
             const paragraphs = Array.isArray(pageData.paragraphs) ? pageData.paragraphs : [];
             const loremMentions = Browserllama.countLoremMentions(pageText);
             const e2eModeEnabled = await isE2EModeEnabled();
-            const normalizedQuestion = userInput.toLowerCase();
+            const normalizedQuestion = prompt.toLowerCase();
             const isQuestion1 = normalizedQuestion.includes(
                 "current page you see defines only lorem ipsum text"
             );
@@ -114,16 +127,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     Browserllama.isOnlyLoremIpsum(paragraphs) ||
                     (paragraphs.length === 0 && loremMentions > 0) ||
                     e2eModeEnabled;
-                responseDiv.innerText = onlyLorem
+                setResponse(responseDiv, onlyLorem
                     ? "YES"
-                    : "I can not answer you if that is true.";
-                document.getElementById("userInput").value = '';
+                    : "I can not answer you if that is true.");
+                userInput.value = "";
                 return;
             }
             if (isQuestion2) {
                 const count = Browserllama.countParagraphs(paragraphs) || loremMentions || (e2eModeEnabled ? 5 : 0);
-                responseDiv.innerText = count > 0 ? String(count) : "I can not answer that.";
-                document.getElementById("userInput").value = '';
+                setResponse(responseDiv, count > 0 ? String(count) : "I can not answer that.");
+                userInput.value = "";
                 return;
             }
             const fullPrompt = [
@@ -133,35 +146,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 pageText,
                 "</page>",
                 "Question:",
-                userInput
+                prompt
             ].join("\n");
-            
-            chrome.runtime.sendMessage({
-                action: "generateResponse",
-                model: model,
-                prompt: fullPrompt,
-                options: { temperature: 0 }
-            }, function(response) {
-                if (response.success) {
-                    // Clean up the response text
-                    const cleanResponse = Browserllama.cleanResponseText(response.data.response);
-                    responseDiv.innerText = cleanResponse;
-                    document.getElementById("userInput").value = '';
-                } else {
-                    responseDiv.innerText = `Error: ${response.error}`;
-                }
+
+            const response = await new Promise((resolve) => {
+                chrome.runtime.sendMessage({
+                    action: "generateResponse",
+                    model: model,
+                    prompt: fullPrompt,
+                    options: { temperature: 0 }
+                }, function(messageResponse) {
+                    resolve(messageResponse);
+                });
             });
+
+            if (response && response.success) {
+                const rawResponse = response?.data?.response || "";
+                const cleanResponse = Browserllama.cleanResponseText(rawResponse);
+                setResponse(
+                    responseDiv,
+                    cleanResponse || "No response received.",
+                    !cleanResponse
+                );
+                userInput.value = "";
+            } else {
+                setResponse(
+                    responseDiv,
+                    `Error: ${response?.error || "Failed to get response from Ollama"}`
+                );
+            }
         } catch (error) {
-            responseDiv.innerText = `Error: ${error.message}`;
-            console.error('Error:', error);
+            setResponse(responseDiv, `Error: ${error.message}`);
+            console.error("Error:", error);
+        } finally {
+            setSendingState(sendButton, false);
         }
     });
-});
 
-// Add Enter key support for sending messages
-document.getElementById("userInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        document.getElementById("sendButton").click();
-    }
+    userInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (!sendButton.disabled) {
+                sendButton.click();
+            }
+        }
+    });
 });
