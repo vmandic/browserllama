@@ -1,8 +1,10 @@
+importScripts("lib/ollama.js");
+
 // Function to get current server address
 async function getServerAddress() {
     return new Promise((resolve) => {
         chrome.storage.sync.get(['ollamaServer'], function(result) {
-            resolve(result.ollamaServer || 'http://localhost:11434');
+            resolve(result.ollamaServer || Browserllama.getDefaultServer());
         });
     });
 }
@@ -25,11 +27,14 @@ async function queryOllama(prompt) {
         const res = await fetch(`${server}/api/generate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                model: model,
-                prompt: prompt,
-                stream: false
-            })
+            body: JSON.stringify(
+                Browserllama.buildGeneratePayload({
+                    model,
+                    prompt,
+                    stream: false,
+                    options: { temperature: 0 }
+                })
+            )
         });
 
         const data = await res.json();
@@ -95,12 +100,19 @@ chrome.runtime.onInstalled.addListener(() => {
     });
 });
 
+let lastContentTabId = null;
+
 // Add selection listener
 chrome.tabs.onActivated.addListener((activeInfo) => {
     chrome.scripting.executeScript({
         target: { tabId: activeInfo.tabId },
         function: addSelectionListener,
     }).catch(console.error);
+    chrome.tabs.get(activeInfo.tabId, (tab) => {
+        if (tab && !isExtensionUrl(tab.url)) {
+            lastContentTabId = activeInfo.tabId;
+        }
+    });
 });
 
 function addSelectionListener() {
@@ -117,24 +129,43 @@ setInterval(() => {
     checkOllamaStatus().catch(console.error);
 }, 10000);
 
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === "complete" && tab && !isExtensionUrl(tab.url)) {
+        lastContentTabId = tabId;
+    }
+});
+
 // Add new message listener for API calls
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getOllamaStatus") {
         checkOllamaStatus(request.server).then(status => sendResponse({ isRunning: status }));
         return true;
     }
+    if (request.action === "getActivePageText") {
+        getPageTextFromActiveTab()
+            .then(data => sendResponse({ success: true, data }))
+            .catch(error => {
+                console.error("Failed to read page text:", error);
+                sendResponse({ success: false, error: error.message || "Failed to read page text" });
+            });
+        return true;
+    }
     if (request.action === "generateResponse") {
-        fetch("http://localhost:11434/api/generate", {
+        getServerAddress()
+        .then(server => fetch(`${server}/api/generate`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                model: request.model,
-                prompt: request.prompt,
-                stream: false
-            })
-        })
+            body: JSON.stringify(
+                Browserllama.buildGeneratePayload({
+                    model: request.model,
+                    prompt: request.prompt,
+                    stream: false,
+                    options: request.options || { temperature: 0 }
+                })
+            )
+        }))
         .then(async res => {
             if (!res.ok) {
                 throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -154,3 +185,65 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 });
+
+async function getPageTextFromActiveTab() {
+    const forcedTarget = await new Promise(resolve => {
+        chrome.storage.local.get(["forceTabUrlPrefix", "forceTabId"], (result) => {
+            resolve({
+                forceTabUrlPrefix: result.forceTabUrlPrefix || null,
+                forceTabId: Number.isInteger(result.forceTabId) ? result.forceTabId : null
+            });
+        });
+    });
+
+    let targetTab = null;
+    if (forcedTarget.forceTabId !== null) {
+        try {
+            const tab = await chrome.tabs.get(forcedTarget.forceTabId);
+            if (tab && !isExtensionUrl(tab.url)) {
+                targetTab = tab;
+            }
+        } catch (error) {
+            console.warn("Failed to read forced tab id:", error);
+        }
+    }
+    if (lastContentTabId) {
+        try {
+            const tab = await chrome.tabs.get(lastContentTabId);
+            if (tab && !isExtensionUrl(tab.url)) {
+                targetTab = tab;
+            }
+        } catch (error) {
+            console.warn("Failed to read last content tab:", error);
+        }
+    }
+    if (!targetTab) {
+        const tabs = await chrome.tabs.query({});
+        if (forcedTarget.forceTabUrlPrefix) {
+            targetTab = tabs.find(tab => typeof tab.url === "string" && tab.url.startsWith(forcedTarget.forceTabUrlPrefix)) || null;
+        }
+        const activeTab = tabs.find(tab => tab.active && !isExtensionUrl(tab.url));
+        const fallbackTab = [...tabs].reverse().find(tab => !isExtensionUrl(tab.url));
+        targetTab = targetTab || activeTab || fallbackTab;
+    }
+    if (!targetTab || !targetTab.id) {
+        throw new Error("No suitable tab found for content capture.");
+    }
+    const results = await chrome.scripting.executeScript({
+        target: { tabId: targetTab.id },
+        function: () => {
+            const paragraphs = Array.from(document.querySelectorAll("p"))
+                .map(p => p.innerText.trim())
+                .filter(Boolean);
+            return {
+                text: document.body?.innerText || "",
+                paragraphs
+            };
+        }
+    });
+    return results && results[0] && results[0].result ? results[0].result : { text: "", paragraphs: [] };
+}
+
+function isExtensionUrl(url) {
+    return typeof url === "string" && url.startsWith("chrome-extension://");
+}

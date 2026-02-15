@@ -24,10 +24,12 @@
         <select id="modelSelect">
             <option value="deepseek-r1:8b">DeepSeek 8B</option>
             <option value="deepseek-r1:1.5b">DeepSeek 1.5B</option>
+            <option value="qwen2.5:7b-16k">qwen2.5 7b (16k context)</option>
         </select>
     </div>
     <button id="sendButton">Send</button>
     <div id="response"></div>
+    <script src="lib/ollama.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>
