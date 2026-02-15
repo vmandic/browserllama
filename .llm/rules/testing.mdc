@@ -1,0 +1,18 @@
+# Testing
+
+This rule defines when to run tests and how to report results so test-related behavior is consistent and honest.
+
+## When to Run Tests
+
+- After changing **extension or lib code** (`src/`): run **`pnpm test`** (unit tests). Report pass/fail and any failure output.
+- If the change touches **UI or end-to-end flows** (popup, background messaging, content): also run **`pnpm run e2e`**. Use `HEADLESS=1 pnpm run e2e` when headless is preferred. Report pass/fail and any failure output.
+- Do not skip running tests when you have changed code that could be covered by existing tests.
+
+## When Tests Do Not Exist
+
+- If there are **no tests** for the changed code (e.g. no unit test for a new helper, no e2e for the changed flow), say **"Tests not run"** or **"No tests for this change"** and do not claim that tests passed.
+- Do not invent test results. If you did not run `pnpm test` or `pnpm run e2e`, do not say they passed.
+
+## Dependencies
+
+- Do **not** add new test frameworks, runners, or testing dependencies unless the user explicitly asks. Prefer existing Vitest (unit) and Playwright (e2e) setup.

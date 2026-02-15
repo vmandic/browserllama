@@ -1,0 +1,61 @@
+# JavaScript Style and Conventions
+
+This rule defines how to write JavaScript in this Chrome extension. Follow it so code stays consistent, maintainable, and aligned with the existing codebase.
+
+## Formatting and Syntax
+
+- Use **4 spaces** for indentation.
+- Use **double quotes** for string literals.
+- Use **semicolons** at the end of statements.
+- Prefer **`const`** for bindings; use `let` only when reassignment is needed. Avoid `var`.
+- Use **arrow functions** for short callbacks and handlers (e.g. `(e) => { ... }`, `.then(x => ...)`).
+- Use the **`function`** keyword for DOM/extension listeners when a named callback improves clarity (e.g. `DOMContentLoaded`), or when `this`/hoisting matters.
+- Keep lines readable; break long expressions or argument lists across lines when they exceed ~100 characters.
+
+## Naming
+
+- Use **camelCase** for variables, functions, and object properties.
+- Use **descriptive names**: e.g. `statusDiv`, `modelSelect`, `getServerAddress`, `checkOllamaStatus`.
+- For booleans or flags, use names that read clearly in conditionals (e.g. `isRunning`, `success`).
+- Message **actions** are string literals; keep them consistent and explicit (e.g. `"getOllamaStatus"`, `"generateResponse"`).
+
+## Structure and Scope
+
+- Put **helper or shared logic** in small, single-purpose functions at the top of the file or in `src/lib/`.
+- Prefer **async/await** for sequential async work; use `.then()/.catch()` when chaining or integrating with callback APIs (e.g. `chrome.runtime.sendMessage`).
+- Wrap **callback-based APIs** (e.g. `chrome.storage.sync.get`) in `new Promise((resolve, reject) => { ... })` when you need to use them with async/await.
+- Use **early returns** to avoid deep nesting: e.g. `if (!userInput) return;` or `if (!response) return;`.
+
+## Chrome Extension Context
+
+- **Popup (`popup.js`)**: Assume DOM is available; attach listeners in `DOMContentLoaded`. Use `chrome.runtime.sendMessage` for status, page text, and generation; handle responses in callbacks and update the DOM.
+- **Background (`background.js`)**: Use `importScripts("lib/ollama.js")` for shared helpers. In `chrome.runtime.onMessage.addListener`, return **`true`** when the handler will call `sendResponse` asynchronously so the message port stays open.
+- **Shared lib (`src/lib/`)**: Use an IIFE that attaches to `global.Browserllama` in the extension and `module.exports` in Node (tests). Keep the surface small and side-effect-free where possible.
+- **Storage**: Use `chrome.storage.sync` for user preferences (e.g. `preferredModel`, `ollamaServer`), `chrome.storage.local` for temporary data (e.g. `tempSelectedText`).
+
+## Error Handling and Robustness
+
+- Use **try/catch** around async flows that can throw (e.g. fetch, JSON parse).
+- **Log errors** with `console.error` (and `console.warn` for non-fatal issues); avoid swallowing failures.
+- Show **user-facing messages** in a consistent form, e.g. `Error: ${error.message}` or a short, fixed string for known cases.
+- **Defensive checks**: Validate `response` and `response.success` (or equivalent) before using result data; use optional chaining where it clarifies (e.g. `document.body?.innerText`).
+- When **fetch** fails or returns non-ok, handle it explicitly (e.g. `if (!res.ok) throw new Error(...)`) and surface a clear message.
+
+## Comments
+
+- Prefer **brief, purposeful comments** that explain intent or non-obvious behavior (e.g. "Check Ollama status", "Return true so sendResponse can be called async").
+- Avoid restating what the code obviously does; do document extension-specific behavior or constraints when helpful.
+
+## Testing
+
+- **Unit tests** (Vitest): Use `describe`/`it`/`expect`; load shared code via `createRequire(import.meta.url)` and `require("../../src/lib/ollama.js")` in `.mjs` files.
+- **E2E tests** (Playwright): Use `require` for Node deps; use async/await for browser and extension actions; keep assertions focused and timeout values explicit where needed (e.g. `{ timeout: 30000 }`).
+- Do not add new dependencies for style or testing unless explicitly requested; keep the stack minimal.
+
+## Senior-Mentality Guidelines
+
+- Prefer **small, safe edits**: change the minimum necessary to achieve the goal; avoid broad refactors unless required.
+- **Single responsibility**: one function does one thing; split large handlers into named helpers.
+- **Explicit over clever**: readable control flow and naming beat brevity; avoid unnecessary abstraction.
+- **Stability first**: preserve existing behavior when adding features; if behavior changes, document it and ensure tests still pass.
+- When in doubt, match the style of the file you are editing (popup, background, lib, or tests).

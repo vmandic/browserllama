@@ -1,0 +1,55 @@
+# How to Create Rule Files
+
+## Location
+All rule files must be placed in the `.llm/rules/` directory at the project root.
+
+## Purpose
+Rule files provide persistent instructions and context for LLM agents working on this project. They should capture:
+- Project-specific conventions and patterns
+- Development workflows and processes
+- Testing and validation procedures
+- Decision-making guidelines
+- Context that agents need to work effectively
+
+## File Format
+- Use Markdown format for Cursor (`.mdc` extension)
+- Use clear, descriptive filenames (e.g., `testing_guide.mdc`, `api_conventions.mdc`)
+- Use lowercase with underscores for rule filenames to distinguish them from regular documentation
+
+## Structure Guidelines
+Each rule file should include:
+1. **Clear heading** - What domain or aspect does this rule cover?
+2. **Specific, actionable instructions** - Avoid vague guidance
+3. **Context** - Why these rules exist (when helpful)
+4. **Examples** - Show correct usage where appropriate
+
+## Writing Style
+- Be concise and direct
+- Use bullet points for lists of rules
+- Use numbered lists for sequential steps
+- Prefer "do X" over "you should do X"
+- Avoid redundancy with other rule files
+
+## Scope
+- **Project rules** - Apply to all work in this project
+- **Domain-specific rules** - Cover specific areas (testing, API design, etc.)
+- **Integration rules** - How different parts of the system interact
+
+## When to Create a New Rule File
+Create a new rule file when:
+- You have a set of related instructions that agents should always follow
+- You're capturing conventions that aren't obvious from the code
+- You need to prevent repeated mistakes or clarify common confusion
+- You want to document a workflow that spans multiple files or steps
+
+## When to Update Existing Rules
+Update rule files when:
+- Instructions become outdated due to project changes
+- New patterns or conventions emerge
+- Existing rules are unclear or incomplete
+- Conflicts or gaps between rules are discovered
+
+## Rule Precedence
+- Rules in subdirectories take precedence over parent directory rules
+- Project rules (with file paths) take precedence over personal rules
+- When in doubt, more specific rules override general rules

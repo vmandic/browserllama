@@ -1,0 +1,26 @@
+# Scope and Edits
+
+This rule defines where to make changes and how to keep edits minimal so the extension stays stable and changes stay easy to review.
+
+## Scope
+
+- **Extension code** lives in `src/` (background, popup, lib). Only change files under `src/` when the task involves extension behavior.
+- **Tests** live in `tests/` (unit under `tests/unit/`, e2e under `tests/e2e/`). Only change test files when adding or updating tests.
+- **Config** (package.json, playwright.config.js, vitest.config.js) stays at repo root. Change config only when the task explicitly requires it.
+- Do **not** edit `src/manifest.json` or `AGENTS.md` unless the user explicitly asks (e.g. new permission, update agent instructions).
+
+## Before Editing
+
+1. **Read** the relevant file(s) first. Use search (`rg` or project search) to find call sites when changing APIs, message actions, or exports.
+2. **Limit** edits to the files needed for the task. Do not "clean up" or refactor unrelated code unless asked.
+
+## Size of Change
+
+- Make the **smallest change** that accomplishes the task. Prefer one focused edit over broad refactors.
+- Do not add features, dependencies, or "improvements" that the user did not ask for.
+- If behavior changes (e.g. new message action, different storage key), briefly explain the change in your reply.
+
+## After Editing
+
+- **Summarize** what changed in one or two sentences.
+- **List touched files** (paths) at the end of your reply so the user can review or commit by file.

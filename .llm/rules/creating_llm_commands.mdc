@@ -1,0 +1,59 @@
+# Defining New LLM Commands
+
+This rule covers how to add and maintain LLM commands in this project so they stay discoverable and consistent.
+
+## Where Commands Live
+
+- **All new LLM commands must be defined under `.llm/commands/`** at the project root.
+- Do not define commands in other directories (e.g. not under `.llm/rules/` or ad hoc in the repo).
+- If `.llm/commands/` does not exist, create it when adding the first command.
+
+## Command File Conventions
+
+- **One command per file** so each command is easy to find and edit.
+- Use **descriptive, lowercase filenames** with underscores (e.g. `run_tests.mdc`, `review_pr.mdc`). Use the `.mdc` extension for Cursor.
+- Name the file after what the command does (e.g. `summarize_changes.mdc`, `add_unit_test.mdc`).
+
+## Command File Structure
+
+Each file under `.llm/commands/` should:
+
+1. **Start with a clear title** (e.g. a single `#` heading) that states the command’s purpose.
+2. **Define the trigger or name** of the command (e.g. slash command name or short label) if your setup uses it.
+3. **Give specific, actionable instructions** for the agent: what to do, in what order, and what to avoid.
+4. **Reference project context when needed** (e.g. "Read AGENTS.md first", "Use `src/` as extension root").
+5. **Stay focused** on a single workflow or task; split complex behavior into multiple commands if it helps.
+
+## Writing Style for Commands
+
+- Use **concise, imperative language** ("Run tests", "Read the file", "Do not modify manifest.json").
+- Use **bullet or numbered lists** for steps and options.
+- Prefer **"do X"** over "you should do X".
+- Include **constraints or guardrails** (e.g. "Only touch files under `src/`", "Do not install new dependencies unless asked").
+
+## When to Add a New Command
+
+- Add a command when you have a **recurring workflow** that benefits from a single, reusable instruction set (e.g. "run e2e and report", "review diff for security").
+- Add a command when you want to **standardize how agents perform a task** (e.g. "how to add a new rule file", "how to define a new command").
+- Do **not** add commands for one-off or highly context-specific tasks; use the chat or a rule file instead.
+
+## Relation to Rules
+
+- **Rules** (in `.llm/rules/`) define ongoing conventions and constraints (how to write JS, how to create rule files).
+- **Commands** (in `.llm/commands/`) define discrete, invocable workflows (what to do when the user runs "X").
+- When a command depends on project conventions, reference the relevant rule file by name (e.g. "Follow `javascript_style_rule.mdc`").
+
+## Example Outline for a Command File
+
+```markdown
+# Command: Run E2E and Report
+
+Trigger: /e2e-report (or as configured)
+
+1. Run `pnpm run e2e` (or `HEADLESS=1 pnpm run e2e` if headless).
+2. If tests fail, list failing specs and the first error message.
+3. Do not change code unless the user asks for a fix.
+4. Keep output to a short summary and any failure details.
+```
+
+New commands in this project **must** be defined under `.llm/commands/` and follow the structure and style above.

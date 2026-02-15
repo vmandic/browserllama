@@ -1,0 +1,18 @@
+# Decisions and Ambiguity
+
+This rule defines how to handle unclear tasks and where to update agent behavior so the LLM does not overreach or guess.
+
+## Unclear or Underspecified Tasks
+
+- If the task is **unclear** (e.g. "improve this", "fix it", missing which file or behavior): do **not** guess. Propose **2–3 concrete options** with short pros/cons so the user can choose.
+- Example: "Add validation" → options could be "validate in popup before send", "validate in background on message", "validate in lib and reuse in both". Pick one only after the user confirms or chooses.
+
+## Do Not Guess
+
+- Do **not** guess environment variables, API keys, URLs, or product requirements. If something is missing (e.g. which Ollama model, which storage key), ask or list options instead of inventing values.
+- Do not assume the user wants a new dependency, a new file, or a refactor unless they said so.
+
+## Updating Agent Behavior or Prompts
+
+- If the user asks to **improve prompts** or **change how the agent behaves** (e.g. "make the agent always run tests", "add a rule about X"): update **AGENTS.md** only, unless they explicitly ask to change a file under `.llm/rules/` or `.llm/commands/`.
+- Do not scatter agent instructions across random files; keep high-level workflow and goals in AGENTS.md.
