@@ -3,11 +3,36 @@ function getServerAddress() {
 }
 
 function getBuiltInProvider() {
-    return window.ai && window.ai.languageModel ? window.ai.languageModel : null;
+    if (typeof LanguageModel !== "undefined") {
+        return {
+            source: "LanguageModel",
+            create: typeof LanguageModel.create === "function" ? LanguageModel.create.bind(LanguageModel) : null,
+            availability: typeof LanguageModel.availability === "function" ? LanguageModel.availability.bind(LanguageModel) : null
+        };
+    }
+
+    if (window.ai && window.ai.languageModel) {
+        const legacyLanguageModel = window.ai.languageModel;
+        return {
+            source: "window.ai.languageModel",
+            create: typeof legacyLanguageModel.create === "function" ? legacyLanguageModel.create.bind(legacyLanguageModel) : null,
+            availability: typeof legacyLanguageModel.availability === "function" ? legacyLanguageModel.availability.bind(legacyLanguageModel) : null
+        };
+    }
+
+    return null;
 }
 
 function delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function trimPageContext(text, maxChars = 6000) {
+    const normalized = String(text || "").trim();
+    if (normalized.length <= maxChars) {
+        return normalized;
+    }
+    return `${normalized.slice(0, maxChars)}\n...[truncated for brevity]`;
 }
 
 async function getActivePageDataWithRetry(maxAttempts = 3) {
@@ -78,9 +103,12 @@ function setPromptContext(promptDiv, text, isPlaceholder = false) {
     promptDiv.scrollTop = 0;
 }
 
-function setSendingState(sendButton, isSending) {
+function setSendingState(sendButton, userInput, providerSelect, modelSelect, isSending) {
     sendButton.disabled = isSending;
-    sendButton.textContent = isSending ? "Sending..." : "Send";
+    sendButton.textContent = "Send";
+    userInput.disabled = isSending;
+    providerSelect.disabled = isSending;
+    modelSelect.disabled = isSending;
 }
 
 function setComposeMode(composeWrap, newPromptButton, isComposeMode, showNewPromptButton = !isComposeMode) {
@@ -96,10 +124,14 @@ function setModelVisibility(modelField, provider) {
     modelField.classList.toggle("is-hidden", provider !== "ollama");
 }
 
+function setNewPromptButtonState(newPromptButton, isCancelMode) {
+    newPromptButton.textContent = isCancelMode ? "Cancel" : "New prompt";
+}
+
 async function getChromeBuiltInAvailability() {
     const languageModel = getBuiltInProvider();
     if (!languageModel) {
-        return { isReady: false, reason: "window.ai.languageModel is not available in this Chrome build." };
+        return { isReady: false, reason: "Chrome built-in LanguageModel API is not available in this Chrome build." };
     }
 
     if (typeof languageModel.availability !== "function") {
@@ -113,6 +145,12 @@ async function getChromeBuiltInAvailability() {
 
         if (isReady) {
             return { isReady: true, reason: "" };
+        }
+        if (availabilityText === "downloadable") {
+            return { isReady: true, reason: "Chrome built-in AI model is downloadable. First prompt may trigger model download." };
+        }
+        if (availabilityText === "downloading") {
+            return { isReady: true, reason: "Chrome built-in AI model is downloading. Try again shortly." };
         }
         if (!availabilityText) {
             return { isReady: false, reason: "Chrome built-in AI is not ready." };
@@ -159,23 +197,40 @@ async function generateWithOllama(model, prompt) {
     });
 }
 
-async function generateWithChromeBuiltIn(prompt, onProgress) {
+async function generateWithChromeBuiltIn(prompt, onProgress, requestState) {
     const languageModel = getBuiltInProvider();
     if (!languageModel || typeof languageModel.create !== "function") {
         throw new Error("Chrome built-in AI API is not available.");
     }
 
     const session = await languageModel.create();
+    let sessionDestroyed = false;
+    requestState.cancel = async () => {
+        requestState.cancelled = true;
+        if (!sessionDestroyed && session && typeof session.destroy === "function") {
+            sessionDestroyed = true;
+            await session.destroy();
+        }
+    };
+
+    if (requestState.cancelled) {
+        throw new Error("Request cancelled.");
+    }
+
     let accumulated = "";
     try {
         const stream = session.promptStreaming(prompt);
         for await (const chunk of stream) {
+            if (requestState.cancelled) {
+                throw new Error("Request cancelled.");
+            }
             accumulated += String(chunk || "");
             onProgress(accumulated);
         }
         return accumulated;
     } finally {
-        if (session && typeof session.destroy === "function") {
+        if (!sessionDestroyed && session && typeof session.destroy === "function") {
+            sessionDestroyed = true;
             await session.destroy();
         }
     }
@@ -195,6 +250,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const sendButton = document.getElementById("sendButton");
     const responseDiv = document.getElementById("response");
     let selectedProvider = "ollama";
+    let activeRequest = null;
+    let pendingPromptText = "";
 
     chrome.storage.sync.get(["preferredProvider"], function(result) {
         selectedProvider = result.preferredProvider || "ollama";
@@ -233,18 +290,43 @@ document.addEventListener("DOMContentLoaded", function() {
 
     setComposeMode(composeWrap, newPromptButton, true);
     setResultsVisibility(responseWrap, false);
+    setNewPromptButtonState(newPromptButton, false);
+
+    const cancelActiveRequest = async () => {
+        if (!activeRequest) {
+            return;
+        }
+        activeRequest.cancelled = true;
+        if (typeof activeRequest.cancel === "function") {
+            await activeRequest.cancel();
+        }
+        activeRequest = null;
+        setResponse(responseDiv, "Request cancelled.", true);
+        setResultsVisibility(responseWrap, false);
+        setComposeMode(composeWrap, newPromptButton, true, false);
+        userInput.value = pendingPromptText;
+        userInput.disabled = false;
+        providerSelect.disabled = false;
+        modelSelect.disabled = false;
+        userInput.focus();
+        setSendingState(sendButton, userInput, providerSelect, modelSelect, false);
+        setNewPromptButtonState(newPromptButton, false);
+    };
 
     const completeResponseCycle = () => {
         userInput.value = "";
         setComposeMode(composeWrap, newPromptButton, false, true);
+        setNewPromptButtonState(newPromptButton, false);
     };
 
     const beginRequestCycle = () => {
-        setComposeMode(composeWrap, newPromptButton, false, false);
+        setComposeMode(composeWrap, newPromptButton, false, true);
+        setNewPromptButtonState(newPromptButton, true);
     };
 
     const restoreComposeAfterError = () => {
         setComposeMode(composeWrap, newPromptButton, true, false);
+        setNewPromptButtonState(newPromptButton, false);
     };
 
     sendButton.addEventListener("click", async () => {
@@ -253,17 +335,28 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
+        pendingPromptText = prompt;
         setResultsVisibility(responseWrap, true);
         beginRequestCycle();
         setPromptContext(lastPromptDiv, prompt);
-        setSendingState(sendButton, true);
+        setSendingState(sendButton, userInput, providerSelect, modelSelect, true);
         setResponse(responseDiv, "Thinking...", true);
 
         try {
+            const requestState = {
+                cancelled: false,
+                cancel: null
+            };
+            activeRequest = requestState;
+
             const model = modelSelect.value;
             const provider = selectedProvider;
             const pageData = await getActivePageDataWithRetry();
+            if (requestState.cancelled) {
+                throw new Error("Request cancelled.");
+            }
             const pageText = pageData.text || "";
+            const limitedPageText = trimPageContext(pageText);
             const paragraphs = Array.isArray(pageData.paragraphs) ? pageData.paragraphs : [];
             const loremMentions = Browserllama.countLoremMentions(pageText);
             const e2eModeEnabled = await isE2EModeEnabled();
@@ -279,6 +372,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     Browserllama.isOnlyLoremIpsum(paragraphs) ||
                     (paragraphs.length === 0 && loremMentions > 0) ||
                     e2eModeEnabled;
+                if (requestState.cancelled) {
+                    throw new Error("Request cancelled.");
+                }
                 setResponse(responseDiv, onlyLorem
                     ? "YES"
                     : "I can not answer you if that is true.");
@@ -287,6 +383,9 @@ document.addEventListener("DOMContentLoaded", function() {
             }
             if (isQuestion2) {
                 const count = Browserllama.countParagraphs(paragraphs) || loremMentions || (e2eModeEnabled ? 5 : 0);
+                if (requestState.cancelled) {
+                    throw new Error("Request cancelled.");
+                }
                 setResponse(responseDiv, count > 0 ? String(count) : "I can not answer that.");
                 completeResponseCycle();
                 return;
@@ -295,7 +394,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 "Use ONLY the text inside <page>...</page> to answer the question.",
                 "Do not use any other words in this prompt when deciding the answer.",
                 "<page>",
-                pageText,
+                limitedPageText,
                 "</page>",
                 "Question:",
                 prompt
@@ -304,7 +403,10 @@ document.addEventListener("DOMContentLoaded", function() {
             if (provider === "chromeBuiltIn") {
                 const rawResponse = await generateWithChromeBuiltIn(fullPrompt, (partialText) => {
                     setResponse(responseDiv, partialText || "Thinking...", !partialText);
-                });
+                }, requestState);
+                if (requestState.cancelled) {
+                    throw new Error("Request cancelled.");
+                }
                 const cleanResponse = Browserllama.cleanResponseText(rawResponse);
                 setResponse(responseDiv, cleanResponse || "No response received.", !cleanResponse);
                 completeResponseCycle();
@@ -312,6 +414,9 @@ document.addEventListener("DOMContentLoaded", function() {
             }
 
             const response = await generateWithOllama(model, fullPrompt);
+            if (requestState.cancelled) {
+                throw new Error("Request cancelled.");
+            }
             if (!response || !response.success) {
                 throw new Error(response?.error || "Failed to get response from Ollama");
             }
@@ -325,20 +430,32 @@ document.addEventListener("DOMContentLoaded", function() {
             );
             completeResponseCycle();
         } catch (error) {
-            setResponse(responseDiv, `Error: ${error.message}`);
-            console.error("Error:", error);
+            if (error && error.message === "Request cancelled.") {
+                setResponse(responseDiv, "Request cancelled.", true);
+            } else {
+                setResponse(responseDiv, `Error: ${error.message}`);
+                console.error("Error:", error);
+            }
             restoreComposeAfterError();
         } finally {
-            setSendingState(sendButton, false);
+            activeRequest = null;
+            setSendingState(sendButton, userInput, providerSelect, modelSelect, false);
+            setNewPromptButtonState(newPromptButton, false);
         }
     });
 
-    newPromptButton.addEventListener("click", () => {
+    newPromptButton.addEventListener("click", async () => {
+        if (activeRequest) {
+            await cancelActiveRequest();
+            return;
+        }
         setPromptContext(lastPromptDiv, "No prompt sent yet.", true);
         setResponse(responseDiv, "Response will appear here.", true);
         setResultsVisibility(responseWrap, false);
         userInput.value = "";
+        pendingPromptText = "";
         setComposeMode(composeWrap, newPromptButton, true);
+        setNewPromptButtonState(newPromptButton, false);
         userInput.focus();
     });
 

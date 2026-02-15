@@ -90,3 +90,76 @@ test("answers questions based on current page content", async () => {
 
   await context.close();
 });
+
+test("answers using Chrome built-in provider when LanguageModel is available", async () => {
+  test.setTimeout(60000);
+  const extensionPath = path.resolve(__dirname, "../../src");
+  const fixturePath = path.resolve(__dirname, "../fixtures/lorem.html");
+  const fixtureHtml = fs.readFileSync(fixturePath, "utf8");
+  const fixtureUrl = "http://fixture.local/";
+
+  const context = await chromium.launchPersistentContext("", {
+    headless: process.env.HEADLESS === "1",
+    args: [
+      `--disable-extensions-except=${extensionPath}`,
+      `--load-extension=${extensionPath}`,
+    ],
+  });
+
+  await context.route(fixtureUrl, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "text/html",
+      body: fixtureHtml,
+    });
+  });
+
+  const contentPage = await context.newPage();
+  await contentPage.goto(fixtureUrl);
+
+  let [serviceWorker] = context.serviceWorkers();
+  if (!serviceWorker) {
+    serviceWorker = await context.waitForEvent("serviceworker");
+  }
+
+  const extensionId = new URL(serviceWorker.url()).host;
+  const popup = await context.newPage();
+  await popup.addInitScript(() => {
+    class MockSession {
+      async *promptStreaming() {
+        yield "Mock";
+        yield " answer";
+      }
+      async destroy() {}
+    }
+
+    globalThis.LanguageModel = {
+      availability: async () => "available",
+      create: async () => new MockSession(),
+    };
+  });
+  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+
+  await expect(popup.locator("#sendButton")).toBeVisible();
+  await popup.evaluate(async (urlPrefix) => {
+    const tabs = await chrome.tabs.query({});
+    const fixtureTab = tabs.find((tab) => tab.title === "Fixture") || null;
+    await chrome.storage.local.set({
+      forceTabUrlPrefix: urlPrefix,
+      forceTabId: fixtureTab && Number.isInteger(fixtureTab.id) ? fixtureTab.id : null,
+    });
+  }, fixtureUrl);
+
+  await popup.locator("#providerSelect").selectOption("chromeBuiltIn");
+  await popup.locator("#userInput").fill("Summarize the current page in three words.");
+  await popup.locator("#sendButton").click();
+  await expect(popup.locator("#response")).toHaveText("Mock answer", { timeout: 10000 });
+  await expect(popup.locator("#newPromptButton")).toBeVisible();
+
+  await popup.evaluate(async () => {
+    await chrome.storage.local.remove(["forceTabUrlPrefix", "forceTabId"]);
+    await chrome.storage.sync.remove(["preferredProvider"]);
+  });
+
+  await context.close();
+});

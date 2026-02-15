@@ -18,6 +18,29 @@ async function getPreferredModel() {
     });
 }
 
+async function getPreferredProvider() {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get(["preferredProvider"], function(result) {
+            resolve(result.preferredProvider || "ollama");
+        });
+    });
+}
+
+function setActiveIconAndTitle(title) {
+    try {
+        chrome.action.setIcon({
+            path: {
+                "16": "icons/circle-16.png",
+                "32": "icons/circle-32.png",
+                "128": "icons/circle-128.png"
+            }
+        });
+    } catch (iconError) {
+        console.warn('Failed to set icon:', iconError);
+    }
+    chrome.action.setTitle({ title });
+}
+
 // Function to query Ollama
 async function queryOllama(prompt) {
     try {
@@ -55,18 +78,7 @@ async function checkOllamaStatus(serverOverride = null) {
         });
         
         if (response.ok) {
-            try {
-                chrome.action.setIcon({
-                    path: {
-                        "16": "icons/circle-16.png",
-                        "32": "icons/circle-32.png",
-                        "128": "icons/circle-128.png"
-                    }
-                });
-            } catch (iconError) {
-                console.warn('Failed to set icon:', iconError);
-            }
-            chrome.action.setTitle({ title: "Ollama is running" });
+            setActiveIconAndTitle("Ollama is running");
             return true;
         }
     } catch (error) {
@@ -88,10 +100,19 @@ async function checkOllamaStatus(serverOverride = null) {
     return false;
 }
 
+async function refreshExtensionStatusIcon() {
+    const provider = await getPreferredProvider();
+    if (provider === "chromeBuiltIn") {
+        setActiveIconAndTitle("Using Chrome built-in AI");
+        return;
+    }
+    await checkOllamaStatus();
+}
+
 // Create context menu on installation
 chrome.runtime.onInstalled.addListener(() => {
     console.log("Browserllama Extension Installed!");
-    checkOllamaStatus().catch(console.error);
+    refreshExtensionStatusIcon().catch(console.error);
     
     chrome.contextMenus.create({
         id: "sendToBrowserllama",
@@ -126,7 +147,7 @@ function addSelectionListener() {
 
 // Check status every 10 seconds
 setInterval(() => {
-    checkOllamaStatus().catch(console.error);
+    refreshExtensionStatusIcon().catch(console.error);
 }, 10000);
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
