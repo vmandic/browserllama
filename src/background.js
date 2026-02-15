@@ -69,22 +69,45 @@ async function queryOllama(prompt) {
 }
 
 // Function to check if Ollama is running
-async function checkOllamaStatus(serverOverride = null) {
+async function fetchOllamaTags(serverOverride = null) {
+    const server = serverOverride || await getServerAddress();
     try {
-        const server = serverOverride || 'http://localhost:11434';
         const response = await fetch(`${server}/api/tags`, {
             method: 'GET',
             mode: 'cors'
         });
-        
-        if (response.ok) {
-            setActiveIconAndTitle("Ollama is running");
-            return true;
+
+        if (!response.ok) {
+            return {
+                isRunning: false,
+                models: [],
+                error: `HTTP ${response.status}: ${response.statusText}`
+            };
         }
+
+        const data = await response.json();
+        return {
+            isRunning: true,
+            models: Browserllama.extractModelNames(data),
+            error: null
+        };
     } catch (error) {
         console.log('Ollama not running:', error);
+        return {
+            isRunning: false,
+            models: [],
+            error: error.message || "Failed to connect to Ollama"
+        };
     }
-    
+}
+
+async function checkOllamaStatus(serverOverride = null) {
+    const tags = await fetchOllamaTags(serverOverride);
+    if (tags.isRunning) {
+        setActiveIconAndTitle("Ollama is running");
+        return true;
+    }
+
     try {
         chrome.action.setIcon({
             path: {
@@ -160,6 +183,20 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getOllamaStatus") {
         checkOllamaStatus(request.server).then(status => sendResponse({ isRunning: status }));
+        return true;
+    }
+    if (request.action === "getOllamaModels") {
+        fetchOllamaTags(request.server)
+            .then((result) => {
+                sendResponse(result);
+            })
+            .catch((error) => {
+                sendResponse({
+                    isRunning: false,
+                    models: [],
+                    error: error.message || "Failed to query Ollama models"
+                });
+            });
         return true;
     }
     if (request.action === "getActivePageText") {

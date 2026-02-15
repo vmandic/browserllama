@@ -6,6 +6,7 @@ const {
   cleanResponseText,
   buildGeneratePayload,
   getDefaultServer,
+  extractModelNames,
 } = require("../../src/lib/ollama.js");
 
 describe("ollama helpers", () => {
@@ -29,5 +30,16 @@ describe("ollama helpers", () => {
   it("cleans response text", () => {
     const text = "  <think>thoughts</think>Answer  ";
     expect(cleanResponseText(text)).toBe("Answer");
+  });
+
+  it("extracts model names from tags response", () => {
+    const names = extractModelNames({
+      models: [
+        { name: "deepseek-r1:1.5b" },
+        { name: "qwen2.5:7b" },
+        { name: "  " },
+      ],
+    });
+    expect(names).toEqual(["deepseek-r1:1.5b", "qwen2.5:7b"]);
   });
 });

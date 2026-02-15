@@ -24,6 +24,15 @@
       .trim();
   }
 
+  function extractModelNames(tagsResponse) {
+    const models = Array.isArray(tagsResponse && tagsResponse.models)
+      ? tagsResponse.models
+      : [];
+    return models
+      .map((model) => String((model && model.name) || "").trim())
+      .filter(Boolean);
+  }
+
   function isOnlyLoremIpsum(paragraphs) {
     if (!Array.isArray(paragraphs) || paragraphs.length === 0) {
       return false;
@@ -49,6 +58,7 @@
     getDefaultServer,
     buildGeneratePayload,
     cleanResponseText,
+    extractModelNames,
     isOnlyLoremIpsum,
     countParagraphs,
     countLoremMentions,

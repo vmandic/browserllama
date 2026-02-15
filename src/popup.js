@@ -1,7 +1,3 @@
-function getServerAddress() {
-    return Browserllama.getDefaultServer();
-}
-
 function getBuiltInProvider() {
     if (typeof LanguageModel !== "undefined") {
         return {
@@ -69,15 +65,15 @@ async function isE2EModeEnabled() {
     });
 }
 
-function setStatus(statusDiv, statusText, isRunning) {
+function setStatus(statusDiv, statusText, isRunning, detailText = "") {
     statusDiv.classList.remove("is-online", "is-offline");
     if (isRunning === true) {
         statusDiv.classList.add("is-online");
-        statusText.textContent = "Connected to Ollama";
+        statusText.textContent = detailText || "Connected to Ollama";
         return;
     }
     statusDiv.classList.add("is-offline");
-    statusText.textContent = "Ollama is not reachable";
+    statusText.textContent = detailText || "Ollama is not reachable";
 }
 
 function setChromeBuiltInStatus(statusDiv, statusText, isReady, detailText = "") {
@@ -161,27 +157,35 @@ async function getChromeBuiltInAvailability() {
     }
 }
 
-async function refreshProviderStatus(statusDiv, statusText, provider, server) {
-    if (provider === "chromeBuiltIn") {
-        const availability = await getChromeBuiltInAvailability();
-        setChromeBuiltInStatus(statusDiv, statusText, availability.isReady, availability.reason);
-        return;
-    }
-
-    const response = await new Promise((resolve) => {
-        chrome.runtime.sendMessage({
-            action: "getOllamaStatus",
-            server
-        }, function(statusResponse) {
-            resolve(statusResponse);
+async function getPreferredModel() {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get(["preferredModel"], (result) => {
+            resolve(result.preferredModel || "");
         });
     });
+}
 
-    if (!response || typeof response.isRunning !== "boolean") {
-        setStatus(statusDiv, statusText, false);
-        return;
+async function getOllamaModels(server) {
+    const response = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({
+            action: "getOllamaModels",
+            server
+        }, function(modelsResponse) {
+            resolve(modelsResponse);
+        });
+    });
+    if (!response) {
+        return {
+            isRunning: false,
+            models: [],
+            error: "No response from background process"
+        };
     }
-    setStatus(statusDiv, statusText, response.isRunning);
+    return {
+        isRunning: response.isRunning === true,
+        models: Array.isArray(response.models) ? response.models : [],
+        error: response.error || ""
+    };
 }
 
 async function generateWithOllama(model, prompt) {
@@ -252,18 +256,95 @@ document.addEventListener("DOMContentLoaded", function() {
     let selectedProvider = "ollama";
     let activeRequest = null;
     let pendingPromptText = "";
+    let isSending = false;
+    let ollamaReady = false;
+    let chromeBuiltInReady = false;
+
+    const setModelOptions = (models) => {
+        modelSelect.innerHTML = "";
+        if (!Array.isArray(models) || models.length === 0) {
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "No models available";
+            modelSelect.appendChild(option);
+            modelSelect.value = "";
+            return;
+        }
+        models.forEach((modelName) => {
+            const option = document.createElement("option");
+            option.value = modelName;
+            option.textContent = modelName;
+            modelSelect.appendChild(option);
+        });
+    };
+
+    const refreshControlsAvailability = () => {
+        const providerReady = selectedProvider === "chromeBuiltIn" ? chromeBuiltInReady : ollamaReady;
+        sendButton.disabled = isSending || !providerReady;
+        modelSelect.disabled = isSending || selectedProvider !== "ollama" || !ollamaReady;
+    };
+
+    const loadOllamaProviderState = async () => {
+        const preferredModel = await getPreferredModel();
+        const result = await getOllamaModels();
+        if (!result.isRunning) {
+            ollamaReady = false;
+            setModelOptions([]);
+            setStatus(
+                statusDiv,
+                statusText,
+                false,
+                result.error
+                    ? `Ollama is not reachable: ${result.error}`
+                    : "Ollama is not reachable. Make sure Ollama is installed and running."
+            );
+            refreshControlsAvailability();
+            return;
+        }
+
+        const models = result.models;
+        if (models.length === 0) {
+            ollamaReady = false;
+            setModelOptions([]);
+            setStatus(statusDiv, statusText, false, "Connected to Ollama but no models are installed.");
+            refreshControlsAvailability();
+            return;
+        }
+
+        ollamaReady = true;
+        setModelOptions(models);
+        const selectedModel = models.includes(preferredModel) ? preferredModel : models[0];
+        modelSelect.value = selectedModel;
+        if (selectedModel && selectedModel !== preferredModel) {
+            chrome.storage.sync.set({ preferredModel: selectedModel });
+        }
+        setStatus(statusDiv, statusText, true);
+        refreshControlsAvailability();
+    };
+
+    const loadChromeBuiltInProviderState = async () => {
+        const availability = await getChromeBuiltInAvailability();
+        chromeBuiltInReady = availability.isReady;
+        setChromeBuiltInStatus(statusDiv, statusText, availability.isReady, availability.reason);
+        refreshControlsAvailability();
+    };
+
+    const refreshProviderState = async () => {
+        if (selectedProvider === "chromeBuiltIn") {
+            await loadChromeBuiltInProviderState();
+            return;
+        }
+        await loadOllamaProviderState();
+    };
+
+    setModelOptions([]);
+    refreshControlsAvailability();
 
     chrome.storage.sync.get(["preferredProvider"], function(result) {
         selectedProvider = result.preferredProvider || "ollama";
         providerSelect.value = selectedProvider;
         setModelVisibility(modelField, selectedProvider);
-        refreshProviderStatus(statusDiv, statusText, selectedProvider, getServerAddress()).catch(console.error);
-    });
-
-    chrome.storage.sync.get(["preferredModel"], function(result) {
-        if (result.preferredModel) {
-            modelSelect.value = result.preferredModel;
-        }
+        refreshProviderState().catch(console.error);
     });
 
     providerSelect.addEventListener("change", function() {
@@ -272,10 +353,13 @@ document.addEventListener("DOMContentLoaded", function() {
             preferredProvider: selectedProvider
         });
         setModelVisibility(modelField, selectedProvider);
-        refreshProviderStatus(statusDiv, statusText, selectedProvider, getServerAddress()).catch(console.error);
+        refreshProviderState().catch(console.error);
     });
 
     modelSelect.addEventListener("change", function() {
+        if (!modelSelect.value) {
+            return;
+        }
         chrome.storage.sync.set({
             preferredModel: modelSelect.value
         });
@@ -307,9 +391,10 @@ document.addEventListener("DOMContentLoaded", function() {
         userInput.value = pendingPromptText;
         userInput.disabled = false;
         providerSelect.disabled = false;
-        modelSelect.disabled = false;
         userInput.focus();
+        isSending = false;
         setSendingState(sendButton, userInput, providerSelect, modelSelect, false);
+        refreshControlsAvailability();
         setNewPromptButtonState(newPromptButton, false);
     };
 
@@ -339,6 +424,7 @@ document.addEventListener("DOMContentLoaded", function() {
         setResultsVisibility(responseWrap, true);
         beginRequestCycle();
         setPromptContext(lastPromptDiv, prompt);
+        isSending = true;
         setSendingState(sendButton, userInput, providerSelect, modelSelect, true);
         setResponse(responseDiv, "Thinking...", true);
 
@@ -351,6 +437,17 @@ document.addEventListener("DOMContentLoaded", function() {
 
             const model = modelSelect.value;
             const provider = selectedProvider;
+            if (provider === "chromeBuiltIn" && !chromeBuiltInReady) {
+                throw new Error("Chrome built-in AI is unavailable in this browser.");
+            }
+            if (provider === "ollama") {
+                if (!ollamaReady) {
+                    throw new Error("Ollama is unavailable. Make sure Ollama is installed and running.");
+                }
+                if (!model) {
+                    throw new Error("No Ollama model is available. Install at least one model.");
+                }
+            }
             const pageData = await getActivePageDataWithRetry();
             if (requestState.cancelled) {
                 throw new Error("Request cancelled.");
@@ -439,7 +536,9 @@ document.addEventListener("DOMContentLoaded", function() {
             restoreComposeAfterError();
         } finally {
             activeRequest = null;
+            isSending = false;
             setSendingState(sendButton, userInput, providerSelect, modelSelect, false);
+            refreshControlsAvailability();
             setNewPromptButtonState(newPromptButton, false);
         }
     });
