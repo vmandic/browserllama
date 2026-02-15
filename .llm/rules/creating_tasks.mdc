@@ -67,7 +67,8 @@ All task files are Markdown files and must include these sections:
 - `# Why`
 - `# How`
 - `# Definition of Done`
-- `# LLM checklist`
+- `# LLM context checklist`
+- `# LLM implementation checklist`
 
 Bug task exception:
 - Bug task files must include `# How to reproduce`.
@@ -93,13 +94,20 @@ Initial UI and UX improvements
 
 # Definition of Done
 
-# LLM checklist
+# LLM context checklist
 - [ ] Gather implementation context now while writing this task (relevant files, current behavior, constraints, dependencies).
 - [ ] Record key context references in this task so implementation starts from concrete facts.
 - [ ] At implementation start, re-check current context because code/spec may have changed.
 - [ ] Review task evolution via git history (`git log --follow -- <task-file>`) before coding.
 - [ ] Confirm latest task edit time from git (`git log -1 --format=%cI -- <task-file>`) before coding.
 - [ ] Update plan based on any drift between recorded context and current repository state.
+
+# LLM implementation checklist
+- [ ] Convert each item from `# How` into explicit implementation todo steps.
+- [ ] Order todos by dependency and execution sequence.
+- [ ] Include file-level targets for each todo when possible.
+- [ ] Mark validation tasks required to satisfy `# Definition of Done`.
+- [ ] Keep checklist task-specific (do not use only generic wording).
 ```
 
 ## Bug Template
@@ -120,13 +128,20 @@ Fix popup status indicator encoding
 
 # Definition of Done
 
-# LLM checklist
+# LLM context checklist
 - [ ] Gather implementation context now while writing this task (relevant files, current behavior, constraints, dependencies).
 - [ ] Record key context references in this task so implementation starts from concrete facts.
 - [ ] At implementation start, re-check current context because code/spec may have changed.
 - [ ] Review task evolution via git history (`git log --follow -- <task-file>`) before coding.
 - [ ] Confirm latest task edit time from git (`git log -1 --format=%cI -- <task-file>`) before coding.
 - [ ] Update plan based on any drift between recorded context and current repository state.
+
+# LLM implementation checklist
+- [ ] Convert each item from `# How` into explicit implementation todo steps.
+- [ ] Order todos by dependency and execution sequence.
+- [ ] Include file-level targets for each todo when possible.
+- [ ] Mark validation tasks required to satisfy `# Definition of Done`.
+- [ ] Keep checklist task-specific (do not use only generic wording).
 ```
 
 ## Creation Workflow
@@ -152,7 +167,8 @@ Fix popup status indicator encoding
 - `# Why`: explain expected value or problem solved.
 - `# How`: list implementation steps in execution order.
 - `# Definition of Done`: include measurable, verifiable outcomes.
-- `# LLM checklist`: ordered, actionable checkboxes for efficient implementation flow.
+- `# LLM context checklist`: generic context/discovery/recheck/git-history actions.
+- `# LLM implementation checklist`: task-specific, concrete todo list derived from `# How`.
 - For bugs, `# How to reproduce` should include deterministic repro steps.
 - Do not add a manual "last edited" field; use git history as the source of truth for task edits.
 
@@ -167,4 +183,5 @@ Fix popup status indicator encoding
 - `# Title` heading exists and matches the filename title in readable form.
 - Required headings exist exactly as defined.
 - Bug tasks include `# How to reproduce` before `# How`.
-- `# LLM checklist` exists and includes context-gather + context-recheck + git-history checks.
+- `# LLM context checklist` exists and includes context-gather + context-recheck + git-history checks.
+- `# LLM implementation checklist` exists and includes task-specific implementation todos.
