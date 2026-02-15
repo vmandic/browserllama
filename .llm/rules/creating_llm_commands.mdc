@@ -1,3 +1,7 @@
+---
+description: This rule is applied when a LLM agent is asked to create a new LLM command file
+alwaysApply: false
+---
 # Defining New LLM Commands
 
 This rule covers how to add and maintain LLM commands in this project so they stay discoverable and consistent.

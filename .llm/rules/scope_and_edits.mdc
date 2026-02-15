@@ -1,3 +1,7 @@
+---
+description: Apply when editing or planning changes to extension code (src/), tests (tests/), or config; defines scope, read-first, smallest change, and listing touched files.
+alwaysApply: false
+---
 # Scope and Edits
 
 This rule defines where to make changes and how to keep edits minimal so the extension stays stable and changes stay easy to review.

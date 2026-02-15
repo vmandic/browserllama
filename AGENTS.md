@@ -8,6 +8,7 @@
   - **testing.mdc** – when to run `pnpm test` and `pnpm run e2e`, "tests not run" when no tests, no extra test deps.
   - **decisions.mdc** – unclear tasks → propose 2–3 options; don’t guess; agent/prompt changes → update this file (AGENTS.md) only.
   - **javascript_style.mdc** – JS style and Chrome extension conventions for this repo.
+  - **commits.mdc** – how to organize changes into meaningful commits; title up to 75 chars, type prefix (feat, fix, refactor, chore, docs, etc.).
   - **creating_llm_rules.mdc** – how to add or change rule files.
   - **creating_llm_commands.mdc** – how to add or change commands in `.llm/commands/`.
 

@@ -1,3 +1,7 @@
+---
+description: Apply when writing or editing JavaScript in the extension (src/, tests/, or JS config); formatting, naming, Chrome extension APIs, and repo conventions.
+alwaysApply: false
+---
 # JavaScript Style and Conventions
 
 This rule defines how to write JavaScript in this Chrome extension. Follow it so code stays consistent, maintainable, and aligned with the existing codebase.

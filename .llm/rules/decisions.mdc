@@ -1,3 +1,7 @@
+---
+description: Apply when the task is unclear or underspecified, when the user asks to change agent or prompt behavior, or when proposing options instead of guessing; update AGENTS.md for behavior changes.
+alwaysApply: false
+---
 # Decisions and Ambiguity
 
 This rule defines how to handle unclear tasks and where to update agent behavior so the LLM does not overreach or guess.

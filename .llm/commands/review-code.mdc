@@ -2,7 +2,13 @@
 
 Trigger: review-code (or as configured)
 
-Perform a senior-level JavaScript code review using **local changes** and **git history** of the touched files. Follow `javascript_style_rule.mdc` and project conventions. Do not modify code unless the user explicitly asks for fixes.
+## Primer
+
+Follow the project rules in **`.llm/rules/`** as the general context for this review: scope and edits (where to change, smallest change), testing (when to run tests, honest reporting), decisions (no guessing; propose options if unclear), **javascript_style.mdc** (JS and Chrome extension conventions), and any other rules that apply to the changed files. Use them to judge correctness, style, and alignment with project goals.
+
+---
+
+Perform a senior-level JavaScript code review using **local changes** and **git history** of the touched files. Do not modify code unless the user explicitly asks for fixes.
 
 ## Input and Scope
 
@@ -46,7 +52,7 @@ Produce exactly the following five sections. Keep each section scoped and action
 
 ### 4. Improvement suggestions (before → after)
 
-- Suggest **non-breaking** improvements: style, readability, error handling, consistency with `javascript_style_rule.mdc`, naming, structure.
+- Suggest **non-breaking** improvements: style, readability, error handling, consistency with `.llm/rules/javascript_style.mdc`, naming, structure.
 - For each suggestion provide:
   - **Before**: current snippet or pattern.
   - **After**: recommended code or pattern.

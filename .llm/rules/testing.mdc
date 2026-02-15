@@ -1,3 +1,7 @@
+---
+description: Apply when code in src/ or tests/ was or will be changed, or when the user asks to run or add tests; when to run pnpm test and pnpm run e2e, honest reporting, no extra test deps.
+alwaysApply: false
+---
 # Testing
 
 This rule defines when to run tests and how to report results so test-related behavior is consistent and honest.

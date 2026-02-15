@@ -1,3 +1,7 @@
+---
+description: This rule is applied when a LLM agent is asked to create a new LLM rule file
+alwaysApply: false
+---
 # How to Create Rule Files
 
 ## Location
