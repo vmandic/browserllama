@@ -142,7 +142,7 @@ Fix popup status indicator encoding
 - [ ] Include file-level targets for each todo when possible.
 - [ ] Mark validation tasks required to satisfy `# Definition of Done`.
 - [ ] Keep checklist task-specific (do not use only generic wording).
-- [ ] Check test coverage, run tests,
+- [ ] Check test coverage, cover and fix what is required, run tests so they pass.
 ```
 
 ## Creation Workflow

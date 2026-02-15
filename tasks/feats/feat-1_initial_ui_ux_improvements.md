@@ -44,3 +44,4 @@ The current popup works functionally but feels raw and inconsistent, which reduc
 - [ ] Add consistent interactive states (focus, hover, disabled) for controls in `src/popup.html`.
 - [ ] Manually verify popup behavior in Chrome extension UI for normal send flow, status updates, and long-response rendering.
 - [ ] Confirm Definition of Done items are satisfied without adding new dependencies.
+- [ ] Check test coverage, cover and fix what is required, run tests so they pass.
