@@ -62,6 +62,17 @@
             color: var(--muted);
         }
 
+        .subtitle-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .subtitle-link:hover,
+        .subtitle-link:focus-visible {
+            text-decoration: underline;
+        }
+
         .status {
             display: flex;
             align-items: center;
@@ -224,7 +235,14 @@
     <main class="popup">
         <header class="header">
             <h1 class="title">Browserllama</h1>
-            <p class="subtitle">Local AI Chat</p>
+            <p class="subtitle">
+                <a
+                    class="subtitle-link"
+                    href="https://vmandic.github.io/browserllama/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >Read setup guide</a>
+            </p>
         </header>
 
         <section id="status" class="status" aria-live="polite">

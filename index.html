@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browserllama | Local AI in Your Browser</title>
+    <meta name="description" content="Browserllama brings local AI chat to Chrome with Ollama or Chrome built-in AI. Follow setup, troubleshooting, and FAQ guides.">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#0f172a">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Browserllama | Local AI in Your Browser">
+    <meta property="og:description" content="Install Browserllama, connect to Ollama, and troubleshoot local AI setup issues quickly.">
+    <meta property="og:url" content="https://vmandic.github.io/browserllama/">
+    <meta property="og:site_name" content="Browserllama">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Browserllama | Local AI in Your Browser">
+    <meta name="twitter:description" content="Single-page setup and fallback guide for Browserllama.">
+    <link rel="canonical" href="https://vmandic.github.io/browserllama/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f4f8ff;
+            --panel: #ffffff;
+            --text: #0f1a2b;
+            --muted: #475569;
+            --line: #d6deec;
+            --brand: #0f766e;
+            --brand-strong: #115e59;
+            --highlight: #0ea5a6;
+            --shadow: 0 20px 45px rgba(18, 35, 61, 0.12);
+            --max: 1120px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 10% 0%, #dff7f4 0%, transparent 36%),
+                radial-gradient(circle at 90% 10%, #dbeafe 0%, transparent 40%),
+                linear-gradient(180deg, #eef6ff 0%, var(--bg) 100%);
+            line-height: 1.65;
+        }
+
+        .shell {
+            max-width: var(--max);
+            margin: 0 auto;
+            padding: 22px;
+        }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+            background: rgba(244, 248, 255, 0.86);
+            border-bottom: 1px solid rgba(214, 222, 236, 0.7);
+        }
+
+        .topbar-inner {
+            max-width: var(--max);
+            margin: 0 auto;
+            padding: 12px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .brand {
+            font-family: "Manrope", "Avenir Next", sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
+        .nav a:hover,
+        .nav a:focus-visible {
+            color: var(--brand-strong);
+        }
+
+        .hero {
+            margin-top: 32px;
+            background: linear-gradient(135deg, #0f766e 0%, #0f172a 68%);
+            color: #ffffff;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            padding: 52px 42px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(20, 184, 166, 0.5) 0%, rgba(20, 184, 166, 0) 70%);
+            right: -70px;
+            bottom: -50px;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-family: "Manrope", "Avenir Next", sans-serif;
+            font-size: clamp(2rem, 4.8vw, 3.6rem);
+            line-height: 1.1;
+            max-width: 14ch;
+        }
+
+        .hero p {
+            margin: 18px 0 0;
+            max-width: 62ch;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.05rem;
+        }
+
+        .hero-cta {
+            margin-top: 26px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            text-decoration: none;
+            padding: 11px 16px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            font-weight: 700;
+            font-size: 0.92rem;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #0f172a;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .section {
+            margin-top: 24px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 30px 26px;
+            box-shadow: 0 8px 28px rgba(13, 30, 52, 0.06);
+        }
+
+        .section h2 {
+            margin: 0;
+            font-family: "Manrope", "Avenir Next", sans-serif;
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            line-height: 1.2;
+        }
+
+        .anchor {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .anchor:hover,
+        .anchor:focus-visible {
+            color: var(--brand-strong);
+        }
+
+        .section h3 {
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-size: 1.06rem;
+            font-family: "Manrope", "Avenir Next", sans-serif;
+        }
+
+        .lead {
+            color: var(--muted);
+            margin: 10px 0 0;
+            max-width: 75ch;
+        }
+
+        .grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+            background: #fbfdff;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .steps {
+            margin: 14px 0 0;
+            padding-left: 18px;
+        }
+
+        .steps li {
+            margin-bottom: 9px;
+        }
+
+        .tip {
+            border-left: 4px solid var(--highlight);
+            background: #f0fdfa;
+            padding: 12px 12px 12px 14px;
+            border-radius: 10px;
+            color: #134e4a;
+            margin-top: 12px;
+        }
+
+        code {
+            background: #edf3ff;
+            border: 1px solid #cfdaee;
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 0.9em;
+        }
+
+        footer {
+            text-align: center;
+            margin: 30px 0 8px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 860px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding: 34px 24px;
+            }
+
+            .section {
+                padding: 22px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">Browserllama</div>
+            <nav class="nav" aria-label="Main">
+                <a href="#features">Features</a>
+                <a href="#setup">Setup</a>
+                <a href="#troubleshooting">Troubleshooting</a>
+                <a href="#faq">FAQ</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <section class="hero" id="overview">
+            <h1>Use local AI in Chrome with Browserllama</h1>
+            <p>
+                Browserllama lets you ask questions about the current page using local models.
+                Use Ollama for full local control, or switch to Chrome built-in AI on supported builds.
+            </p>
+            <div class="hero-cta">
+                <a class="btn btn-primary" href="#setup">Start Setup</a>
+                <a class="btn btn-secondary" href="#troubleshooting">Fix Common Issues</a>
+            </div>
+        </section>
+
+        <section class="section" id="features">
+            <h2><a class="anchor" href="#features">Features</a></h2>
+            <p class="lead">Focused, practical features for local-first browsing assistance.</p>
+            <div class="grid">
+                <article class="card">
+                    <h3>Local-first prompts</h3>
+                    <p>Ask questions against page content without sending prompts to hosted SaaS APIs.</p>
+                </article>
+                <article class="card">
+                    <h3>Provider choice</h3>
+                    <p>Switch between Ollama and Chrome built-in AI directly from the popup.</p>
+                </article>
+                <article class="card">
+                    <h3>Model selection</h3>
+                    <p>Pick your local Ollama model in popup settings and keep your preferred default.</p>
+                </article>
+                <article class="card">
+                    <h3>Fast fallback docs</h3>
+                    <p>Use this page for setup and troubleshooting when local AI is not ready yet.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="setup">
+            <h2><a class="anchor" href="#setup">Setup</a></h2>
+            <p class="lead">Basic install for Browserllama with Ollama (recommended default path).</p>
+            <ol class="steps">
+                <li>Install Ollama from <a href="https://ollama.com" target="_blank" rel="noopener noreferrer">ollama.com</a>.</li>
+                <li>Start the server with the app or run <code>ollama serve</code>.</li>
+                <li>Pull a model, for example <code>ollama pull deepseek-r1:8b</code>.</li>
+                <li>Load extension source from <code>src/</code> in <code>chrome://extensions</code> with Developer Mode enabled.</li>
+                <li>Open Browserllama popup, keep provider on Ollama, and send a test prompt.</li>
+            </ol>
+            <div class="tip">
+                If your popup says Ollama is unreachable, jump to <a href="#troubleshooting-ollama-unreachable">Ollama troubleshooting</a>.
+            </div>
+        </section>
+
+        <section class="section" id="troubleshooting">
+            <h2><a class="anchor" href="#troubleshooting">Troubleshooting</a></h2>
+            <p class="lead">Fast fixes for the setup failures users hit most often.</p>
+
+            <h3 id="troubleshooting-ollama-unreachable"><a class="anchor" href="#troubleshooting-ollama-unreachable">Ollama is not installed or not reachable</a></h3>
+            <ol class="steps">
+                <li>Confirm Ollama is installed: run <code>ollama --version</code> in your terminal.</li>
+                <li>Start server: run <code>ollama serve</code> and keep it running.</li>
+                <li>Confirm default endpoint responds: open <code>http://localhost:11434</code> in your browser.</li>
+                <li>Check Browserllama provider is set to <strong>Ollama</strong> and model exists locally.</li>
+                <li>If needed, configure CORS origins for your extension ID via Ollama environment variables.</li>
+            </ol>
+
+            <h3 id="troubleshooting-model-missing"><a class="anchor" href="#troubleshooting-model-missing">Model is missing or replies fail</a></h3>
+            <ol class="steps">
+                <li>List installed models: <code>ollama list</code>.</li>
+                <li>Install one supported model such as <code>deepseek-r1:8b</code> or <code>qwen2.5:7b-16k</code>.</li>
+                <li>Retry from popup after selecting the same model in the dropdown.</li>
+            </ol>
+
+            <h3 id="troubleshooting-chrome-ai"><a class="anchor" href="#troubleshooting-chrome-ai">Chrome built-in AI provider is unavailable</a></h3>
+            <ol class="steps">
+                <li>Use a Chrome build/channel that supports built-in AI APIs in your region and account setup.</li>
+                <li>Go to <code>chrome://flags</code> and enable built-in AI related flags (names can change by version): Prompt API / Gemini Nano / optimization model flags.</li>
+                <li>Relaunch Chrome after changing flags.</li>
+                <li>In Browserllama popup, switch provider to <strong>Chrome built-in AI</strong>.</li>
+                <li>If still unavailable, test in DevTools Console: <code>typeof LanguageModel</code> or <code>window.ai?.languageModel</code>.</li>
+            </ol>
+            <div class="tip">
+                Flag names and availability vary across Chrome versions. If one name is missing, search <code>chrome://flags</code> for "AI", "Prompt", and "Gemini Nano".
+            </div>
+        </section>
+
+        <section class="section" id="faq">
+            <h2><a class="anchor" href="#faq">FAQ</a></h2>
+            <p class="lead">Common Browserllama questions with direct answers.</p>
+
+            <h3 id="faq-what-is-browserllama"><a class="anchor" href="#faq-what-is-browserllama">What is Browserllama?</a></h3>
+            <p>A Chrome extension that lets you ask AI questions about the active page using local providers.</p>
+
+            <h3 id="faq-do-i-need-ollama"><a class="anchor" href="#faq-do-i-need-ollama">Do I need Ollama to use it?</a></h3>
+            <p>Not always. You can use Ollama (default) or switch to Chrome built-in AI if your Chrome supports it.</p>
+
+            <h3 id="faq-how-do-i-install-ollama"><a class="anchor" href="#faq-how-do-i-install-ollama">How do I install Ollama quickly?</a></h3>
+            <p>Install from <a href="https://ollama.com" target="_blank" rel="noopener noreferrer">ollama.com</a>, run <code>ollama serve</code>, then pull a model like <code>ollama pull deepseek-r1:8b</code>.</p>
+
+            <h3 id="faq-which-folder-load"><a class="anchor" href="#faq-which-folder-load">Which folder should I load in Chrome extensions?</a></h3>
+            <p>Load the <code>src/</code> folder from this repository in <code>chrome://extensions</code>.</p>
+
+            <h3 id="faq-why-no-response"><a class="anchor" href="#faq-why-no-response">Why do I get no response?</a></h3>
+            <p>Check provider status in popup first, then verify Ollama server/model readiness or Chrome built-in AI availability.</p>
+
+            <h3 id="faq-chrome-flags"><a class="anchor" href="#faq-chrome-flags">Which Chrome experiments should I enable for local AI?</a></h3>
+            <p>Enable current built-in AI related flags in <code>chrome://flags</code>, then relaunch and retest. Names vary by Chrome version, so search by keyword.</p>
+        </section>
+
+        <footer>
+            Browserllama fallback docs and setup guide.
+        </footer>
+    </main>
+</body>
+</html>
