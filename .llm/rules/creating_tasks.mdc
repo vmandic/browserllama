@@ -1,0 +1,98 @@
+---
+description: This rule is applied when a LLM agent is asked to create a new task file in the project backlog
+alwaysApply: false
+---
+# How to Create Task Files
+
+## Location
+All task files must be created under `tasks/` at the project root.
+
+Use this exact task-type mapping:
+
+| Task type | Directory | Filename prefix |
+| --- | --- | --- |
+| Bug | `tasks/bugs/` | `bugfix-` |
+| Feature | `tasks/feats/` | `feat-` |
+| Chore | `tasks/chores/` | `chore-` |
+| LLM | `tasks/llm/` | `llm-` |
+| Tech | `tasks/tech/` | `tech-` |
+
+## Filename Convention
+Task files must use these exact filename templates:
+- `bugfix-00001.md`
+- `feat-00001.md`
+- `chore-00001.md`
+- `llm-00001.md`
+- `tech-00001.md`
+
+Rules:
+- Use only the mapped prefix for the selected task type.
+- Use a 5-digit, zero-padded number (`00001`, `00002`, ...).
+- Keep the `.md` extension.
+- Do not add suffixes, extra words, or dates in the filename.
+
+Sequence rules:
+- Numbering is scoped by prefix within its task directory.
+- New file uses the next available number for that prefix.
+- Do not reuse or renumber existing task files.
+
+## File Content Template
+All task files are Markdown files and must include these sections:
+
+- `# What`
+- `# Why`
+- `# How`
+- `# Definition of Done`
+
+Bug task exception:
+- Bug task files must include `# How to reproduce`.
+- For bug tasks, include `# How to reproduce` before `# How`.
+- Heading names must match exactly (same spelling and capitalization).
+
+## Standard Template (feat/chore/llm/tech)
+```markdown
+# What
+
+# Why
+
+# How
+
+# Definition of Done
+```
+
+## Bug Template
+```markdown
+# What
+
+# Why
+
+# How to reproduce
+
+# How
+
+# Definition of Done
+```
+
+## Creation Workflow
+1. Determine the task type (bug, feature, chore, llm, tech).
+2. Map the type to directory and prefix using the table above.
+3. Find existing files with that prefix in that directory.
+4. Pick the next available 5-digit number.
+5. Create `<prefix><number>.md` in that directory.
+6. Fill required headings using the correct template.
+7. If type is bug, include `# How to reproduce` before `# How`.
+
+## Writing Guidelines
+- Keep content concise and actionable.
+- `# What`: state the change clearly.
+- `# Why`: explain expected value or problem solved.
+- `# How`: list implementation steps in execution order.
+- `# Definition of Done`: include measurable, verifiable outcomes.
+- For bugs, `# How to reproduce` should include deterministic repro steps.
+
+## Validation Checklist
+- File is in the correct `tasks/<type>/` directory.
+- Filename exactly matches `<prefix>-NNNNN.md`.
+- Number is the next available for that prefix.
+- Required headings exist exactly as defined.
+- Bug tasks include `# How to reproduce` before `# How`.
