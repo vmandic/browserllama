@@ -17,6 +17,17 @@ Use this exact task-type mapping:
 | LLM | `tasks/llm/` | `llm-` |
 | Tech | `tasks/tech/` | `tech-` |
 
+## Task Storage Format
+Tasks can be stored in one of two formats:
+
+1. Single Markdown file task.
+2. Task directory package (for attachments, images, assets, notes).
+
+If a task directory package is used:
+- Directory name must follow the same naming convention as task files, but without `.md`.
+- A required primary Markdown file must exist at `<task-dir>/README.md`.
+- Optional supporting files may be added in subfolders (for example: `assets/`, `images/`, `attachments/`).
+
 ## Filename Convention
 Task files must use these filename templates:
 - `bugfix-00001_<title>.md`
@@ -24,6 +35,13 @@ Task files must use these filename templates:
 - `chore-00001_<title>.md`
 - `llm-00001_<title>.md`
 - `tech-00001_<title>.md`
+
+Task directories must use these directory name templates:
+- `bugfix-00001_<title>/`
+- `feat-00001_<title>/`
+- `chore-00001_<title>/`
+- `llm-00001_<title>/`
+- `tech-00001_<title>/`
 
 Rules:
 - Use only the mapped prefix for the selected task type.
@@ -36,8 +54,9 @@ Rules:
 
 Sequence rules:
 - Numbering is scoped by prefix within its task directory.
-- New file uses the next available number for that prefix.
+- New task uses the next available number for that prefix.
 - Do not reuse or renumber existing task files.
+- File and directory task formats share the same sequence space.
 
 ## File Content Template
 All task files are Markdown files and must include these sections:
@@ -87,13 +106,16 @@ Fix popup status indicator encoding
 ## Creation Workflow
 1. Determine the task type (bug, feature, chore, llm, tech).
 2. Map the type to directory and prefix using the table above.
-3. Find existing files with that prefix in that directory.
-4. Pick the next available 5-digit number.
-5. Define a concise title of up to 6 words.
-6. Convert the title to lowercase underscore format for filename suffix.
-7. Create `<prefix><number>_<title>.md` in that directory.
-8. Fill required headings using the correct template.
-9. If type is bug, include `# How to reproduce` before `# How`.
+3. Choose storage format: single Markdown file or task directory package.
+4. Find existing files and directories with that prefix in that directory.
+5. Pick the next available 5-digit number.
+6. Define a concise title of up to 6 words.
+7. Convert the title to lowercase underscore format for filename suffix.
+8. Create either:
+   - `<prefix><number>_<title>.md`, or
+   - `<prefix><number>_<title>/README.md` (required for directory tasks).
+9. Fill required headings using the correct template.
+10. If type is bug, include `# How to reproduce` before `# How`.
 
 ## Writing Guidelines
 - Keep content concise and actionable.
@@ -106,7 +128,9 @@ Fix popup status indicator encoding
 
 ## Validation Checklist
 - File is in the correct `tasks/<type>/` directory.
-- Filename exactly matches `<prefix>-NNNNN_<title>.md`.
+- Task is either:
+  - file: `<prefix>-NNNNN_<title>.md`, or
+  - directory: `<prefix>-NNNNN_<title>/README.md` exists.
 - Filename title suffix uses lowercase words separated by underscores and is at most 6 words.
 - Number is the next available for that prefix.
 - `# Title` heading exists and matches the filename title in readable form.
