@@ -61,20 +61,27 @@ Sequence rules:
 ## File Content Template
 All task files are Markdown files and must include these sections:
 
+- `# Created at (UTC)`
 - `# Title`
 - `# What`
 - `# Why`
 - `# How`
 - `# Definition of Done`
+- `# LLM checklist`
 
 Bug task exception:
 - Bug task files must include `# How to reproduce`.
 - For bug tasks, include `# How to reproduce` before `# How`.
 - Heading names must match exactly (same spelling and capitalization).
 - The `# Title` value must match the filename title segment in human-readable form.
+- `# Created at (UTC)` must use ISO 8601 UTC format (example: `2026-02-15T13:45:00Z`).
+- Task spec edit history must be reviewed via git before implementation.
 
 ## Standard Template (feat/chore/llm/tech)
 ```markdown
+# Created at (UTC)
+2026-02-15T13:45:00Z
+
 # Title
 Initial UI and UX improvements
 
@@ -85,10 +92,21 @@ Initial UI and UX improvements
 # How
 
 # Definition of Done
+
+# LLM checklist
+- [ ] Gather implementation context now while writing this task (relevant files, current behavior, constraints, dependencies).
+- [ ] Record key context references in this task so implementation starts from concrete facts.
+- [ ] At implementation start, re-check current context because code/spec may have changed.
+- [ ] Review task evolution via git history (`git log --follow -- <task-file>`) before coding.
+- [ ] Confirm latest task edit time from git (`git log -1 --format=%cI -- <task-file>`) before coding.
+- [ ] Update plan based on any drift between recorded context and current repository state.
 ```
 
 ## Bug Template
 ```markdown
+# Created at (UTC)
+2026-02-15T13:45:00Z
+
 # Title
 Fix popup status indicator encoding
 
@@ -101,6 +119,14 @@ Fix popup status indicator encoding
 # How
 
 # Definition of Done
+
+# LLM checklist
+- [ ] Gather implementation context now while writing this task (relevant files, current behavior, constraints, dependencies).
+- [ ] Record key context references in this task so implementation starts from concrete facts.
+- [ ] At implementation start, re-check current context because code/spec may have changed.
+- [ ] Review task evolution via git history (`git log --follow -- <task-file>`) before coding.
+- [ ] Confirm latest task edit time from git (`git log -1 --format=%cI -- <task-file>`) before coding.
+- [ ] Update plan based on any drift between recorded context and current repository state.
 ```
 
 ## Creation Workflow
@@ -114,17 +140,21 @@ Fix popup status indicator encoding
 8. Create either:
    - `<prefix><number>_<title>.md`, or
    - `<prefix><number>_<title>/README.md` (required for directory tasks).
-9. Fill required headings using the correct template.
-10. If type is bug, include `# How to reproduce` before `# How`.
+9. Set `# Created at (UTC)` to the current UTC timestamp in ISO 8601 format.
+10. Fill required headings using the correct template.
+11. If type is bug, include `# How to reproduce` before `# How`.
 
 ## Writing Guidelines
 - Keep content concise and actionable.
 - `# Title`: short human-readable task title matching the filename suffix.
+- `# Created at (UTC)`: creation timestamp only; do not overwrite later.
 - `# What`: state the change clearly.
 - `# Why`: explain expected value or problem solved.
 - `# How`: list implementation steps in execution order.
 - `# Definition of Done`: include measurable, verifiable outcomes.
+- `# LLM checklist`: ordered, actionable checkboxes for efficient implementation flow.
 - For bugs, `# How to reproduce` should include deterministic repro steps.
+- Do not add a manual "last edited" field; use git history as the source of truth for task edits.
 
 ## Validation Checklist
 - File is in the correct `tasks/<type>/` directory.
@@ -133,6 +163,8 @@ Fix popup status indicator encoding
   - directory: `<prefix>-NNNNN_<title>/README.md` exists.
 - Filename title suffix uses lowercase words separated by underscores and is at most 6 words.
 - Number is the next available for that prefix.
+- `# Created at (UTC)` exists and is a valid ISO 8601 UTC timestamp.
 - `# Title` heading exists and matches the filename title in readable form.
 - Required headings exist exactly as defined.
 - Bug tasks include `# How to reproduce` before `# How`.
+- `# LLM checklist` exists and includes context-gather + context-recheck + git-history checks.
