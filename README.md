@@ -1,69 +1,127 @@
 # Browserllama
 
-A chrome extension for integrating a local running Ollama server into your browser.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![Tests](https://img.shields.io/badge/tests-vitest%20%2B%20playwright-0ea5a6)](#testing)
+[![Chrome Extension](https://img.shields.io/badge/chrome-extension-MV3-1d4ed8)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 
-## Prerequisites
+Local-first AI assistant for Chrome pages.
+Browserllama lets you ask questions about the current tab using:
 
-- Chrome browser
-- Ollama server running locally
-- At least one LLM model installed locally (from the supported models in this plugin, or you can edit the code and add your own)
+- Ollama running on your machine
+- Chrome built-in AI (when supported by your Chrome build)
+
+## Docs Hub
+
+Use the public setup + fallback docs page:
+
+- [Browserllama GitHub Pages](https://vmandic.github.io/browserllama/)
+
+This page includes setup guides, troubleshooting, and FAQ links with section anchors.
+
+## Screenshot
+
+![Browserllama popup](src/images/screenshot.jpg)
 
 ## Features
 
-- Send messages to local Ollama server and get responses
-- Select LLM of own choice you installed locally
+- Prompt against the current page context.
+- Provider switch between Ollama and Chrome built-in AI.
+- Model selection for Ollama providers.
+- Compact popup workflow with prompt/response history.
+- Fallback docs link in the popup header.
 
-## Why
+## Quick Start
 
-- I want to use Ollama on my browser and I want to run it all locally with the LLM model I can select.
+### 1) Clone and install
 
-## How does it look?
-
-<img src="src/images/screenshot.jpg" alt="Screenshot of Browserllama" />
-
-## Install
-
-- Download the code and load the `src/` folder manually into chrome extensions (chrome://extensions/)
-- Make sure your Ollama server is running and accessible at `http://localhost:11434/api/generate`
-- You can also run CLI `ollama serve` to start the server (instead of running the actual application), but make sure you set up the environment variables for the server to run, i.e. to allow CORS for chrome-extension://[ID] (you can find out the ID after you install the extension), for example I added these to my .bashrc file (more info [here on this github issue](https://github.com/ollama/ollama/issues/6489)):
-
-```bashrc
-export OLLAMA_ALLOW_ORIGINS=chrome-extension://moemjknfmlpkgamlcdnmpobaakdpindc
-export OLLAMA_ORIGINS=chrome-extension://*
+```bash
+git clone https://github.com/vmandic/browserllama.git
+cd browserllama
+pnpm install
 ```
+
+### 2) Load extension in Chrome
+
+1. Open `chrome://extensions`.
+2. Enable **Developer mode**.
+3. Click **Load unpacked**.
+4. Select the `src/` folder.
+
+### 3) Prepare provider
+
+#### Option A: Ollama (recommended default)
+
+1. Install Ollama from [ollama.com](https://ollama.com/).
+2. Start the server:
+
+```bash
+ollama serve
+```
+
+3. Pull at least one model:
+
+```bash
+ollama pull deepseek-r1:8b
+```
+
+4. Open Browserllama popup and keep provider on **Ollama**.
+
+#### Option B: Chrome built-in AI
+
+1. Use a compatible Chrome build and account setup.
+2. Enable required AI-related flags in `chrome://flags`.
+3. Relaunch Chrome.
+4. In popup provider dropdown, select **Chrome built-in AI**.
+
+If the provider is unavailable, see the docs hub troubleshooting section:
+[https://vmandic.github.io/browserllama/#troubleshooting-chrome-ai](https://vmandic.github.io/browserllama/#troubleshooting-chrome-ai)
+
+## Configuration Notes
+
+Browserllama defaults to `http://localhost:11434` for Ollama.
+
+If you use `ollama serve` and need to allow extension origins, set environment vars (example):
+
+```bash
+export OLLAMA_ALLOW_ORIGINS="chrome-extension://<your-extension-id>"
+export OLLAMA_ORIGINS="chrome-extension://*"
+```
+
+Reference discussion:
+[https://github.com/ollama/ollama/issues/6489](https://github.com/ollama/ollama/issues/6489)
 
 ## Testing
 
 ### Unit tests
 
-1. Install dev dependencies:
-
-```bash
-pnpm install
-```
-
-2. Run unit tests:
-
 ```bash
 pnpm test
 ```
 
-### E2E (extension UI)
+### E2E tests
 
-1. Install Playwright and the Chromium browser:
+Install Chromium for Playwright (first run only):
 
 ```bash
 pnpm exec playwright install chromium
 ```
 
-2. Run the E2E test (headed by default so you can see the UI):
+Run e2e (headed):
 
 ```bash
 pnpm run e2e
 ```
 
-3. Run headless if desired:
+Run e2e (headless):
 
 ```bash
 HEADLESS=1 pnpm run e2e
 ```
+
+## Roadmap Tasks
+
+Backlog specs live under [`tasks/`](tasks/) and feature work items under [`tasks/feats/`](tasks/feats/).
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).
