@@ -259,6 +259,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let isSending = false;
     let ollamaReady = false;
     let chromeBuiltInReady = false;
+    let providerStateRequestId = 0;
 
     const setModelOptions = (models) => {
         modelSelect.innerHTML = "";
@@ -284,19 +285,48 @@ document.addEventListener("DOMContentLoaded", function() {
         modelSelect.disabled = isSending || selectedProvider !== "ollama" || !ollamaReady;
     };
 
-    const loadOllamaProviderState = async () => {
+    const isStaleProviderStateRequest = (requestId) => requestId !== providerStateRequestId;
+
+    const loadOllamaProviderState = async (requestId, options = {}) => {
+        const allowAutoSwitch = options.allowAutoSwitch === true;
         const preferredModel = await getPreferredModel();
+        if (isStaleProviderStateRequest(requestId)) {
+            return;
+        }
         const result = await getOllamaModels();
+        if (isStaleProviderStateRequest(requestId)) {
+            return;
+        }
         if (!result.isRunning) {
             ollamaReady = false;
             setModelOptions([]);
+            const chromeAvailability = await getChromeBuiltInAvailability();
+            if (isStaleProviderStateRequest(requestId)) {
+                return;
+            }
+            chromeBuiltInReady = chromeAvailability.isReady;
+            if (chromeAvailability.isReady && allowAutoSwitch) {
+                selectedProvider = "chromeBuiltIn";
+                providerSelect.value = "chromeBuiltIn";
+                chrome.storage.sync.set({ preferredProvider: "chromeBuiltIn" });
+                setModelVisibility(modelField, selectedProvider);
+                setChromeBuiltInStatus(
+                    statusDiv,
+                    statusText,
+                    true,
+                    "Ollama is unavailable. Switched to Chrome built-in AI."
+                );
+                refreshControlsAvailability();
+                return;
+            }
+            const errorDetail = result.error
+                ? `Ollama is not reachable: ${result.error}`
+                : "Ollama is not reachable. Make sure Ollama is installed and running.";
             setStatus(
                 statusDiv,
                 statusText,
                 false,
-                result.error
-                    ? `Ollama is not reachable: ${result.error}`
-                    : "Ollama is not reachable. Make sure Ollama is installed and running."
+                errorDetail
             );
             refreshControlsAvailability();
             return;
@@ -322,19 +352,24 @@ document.addEventListener("DOMContentLoaded", function() {
         refreshControlsAvailability();
     };
 
-    const loadChromeBuiltInProviderState = async () => {
+    const loadChromeBuiltInProviderState = async (requestId) => {
         const availability = await getChromeBuiltInAvailability();
+        if (isStaleProviderStateRequest(requestId)) {
+            return;
+        }
         chromeBuiltInReady = availability.isReady;
         setChromeBuiltInStatus(statusDiv, statusText, availability.isReady, availability.reason);
         refreshControlsAvailability();
     };
 
-    const refreshProviderState = async () => {
+    const refreshProviderState = async (options = {}) => {
+        const requestId = providerStateRequestId + 1;
+        providerStateRequestId = requestId;
         if (selectedProvider === "chromeBuiltIn") {
-            await loadChromeBuiltInProviderState();
+            await loadChromeBuiltInProviderState(requestId);
             return;
         }
-        await loadOllamaProviderState();
+        await loadOllamaProviderState(requestId, options);
     };
 
     setModelOptions([]);
@@ -344,7 +379,7 @@ document.addEventListener("DOMContentLoaded", function() {
         selectedProvider = result.preferredProvider || "ollama";
         providerSelect.value = selectedProvider;
         setModelVisibility(modelField, selectedProvider);
-        refreshProviderState().catch(console.error);
+        refreshProviderState({ allowAutoSwitch: true }).catch(console.error);
     });
 
     providerSelect.addEventListener("change", function() {
@@ -353,7 +388,7 @@ document.addEventListener("DOMContentLoaded", function() {
             preferredProvider: selectedProvider
         });
         setModelVisibility(modelField, selectedProvider);
-        refreshProviderState().catch(console.error);
+        refreshProviderState({ allowAutoSwitch: false }).catch(console.error);
     });
 
     modelSelect.addEventListener("change", function() {

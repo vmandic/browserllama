@@ -116,6 +116,14 @@ test("keeps popup stable when Ollama is offline", async () => {
   }
   const extensionId = new URL(serviceWorker.url()).host;
   const popup = await context.newPage();
+  await popup.addInitScript(() => {
+    try {
+      delete globalThis.LanguageModel;
+    } catch (error) {
+      globalThis.LanguageModel = undefined;
+    }
+    globalThis.ai = undefined;
+  });
   await popup.goto(`chrome-extension://${extensionId}/popup.html`);
 
   await expect(popup.locator("#statusText")).toContainText("Ollama is not reachable");
@@ -228,6 +236,134 @@ test("shows unsupported status when Chrome built-in AI is unavailable", async ()
 
   await popup.locator("#providerSelect").selectOption("chromeBuiltIn");
   await expect(popup.locator("#statusText")).toContainText("not available");
+  await expect(popup.locator("#sendButton")).toBeDisabled();
+
+  await popup.evaluate(async () => {
+    await chrome.storage.sync.remove(["preferredProvider"]);
+  });
+
+  await context.close();
+});
+
+test("auto-switches to Chrome built-in when Ollama is offline", async () => {
+  test.setTimeout(30000);
+  const extensionPath = path.resolve(__dirname, "../../src");
+  const fixturePath = path.resolve(__dirname, "../fixtures/lorem.html");
+  const fixtureHtml = fs.readFileSync(fixturePath, "utf8");
+  const fixtureUrl = "http://fixture.local/";
+
+  const context = await chromium.launchPersistentContext("", {
+    headless: process.env.HEADLESS === "1",
+    args: [
+      `--disable-extensions-except=${extensionPath}`,
+      `--load-extension=${extensionPath}`,
+    ],
+  });
+
+  await context.route(fixtureUrl, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "text/html",
+      body: fixtureHtml,
+    });
+  });
+
+  await context.route("http://localhost:11434/api/tags", async (route) => {
+    await route.abort("connectionrefused");
+  });
+
+  const contentPage = await context.newPage();
+  await contentPage.goto(fixtureUrl);
+
+  let [serviceWorker] = context.serviceWorkers();
+  if (!serviceWorker) {
+    serviceWorker = await context.waitForEvent("serviceworker");
+  }
+
+  const extensionId = new URL(serviceWorker.url()).host;
+  const popup = await context.newPage();
+  await popup.addInitScript(() => {
+    class MockSession {
+      async *promptStreaming() {
+        yield "Fallback";
+        yield " works";
+      }
+      async destroy() {}
+    }
+
+    globalThis.LanguageModel = {
+      availability: async () => "available",
+      create: async () => new MockSession(),
+    };
+  });
+  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+
+  await popup.evaluate(async (urlPrefix) => {
+    const tabs = await chrome.tabs.query({});
+    const fixtureTab = tabs.find((tab) => tab.title === "Fixture") || null;
+    await chrome.storage.local.set({
+      forceTabUrlPrefix: urlPrefix,
+      forceTabId: fixtureTab && Number.isInteger(fixtureTab.id) ? fixtureTab.id : null,
+    });
+  }, fixtureUrl);
+
+  await expect(popup.locator("#providerSelect")).toHaveValue("chromeBuiltIn");
+  await expect(popup.locator("#statusText")).toContainText("Chrome built-in AI is ready");
+  await expect(popup.locator("#sendButton")).toBeEnabled();
+
+  await popup.locator("#userInput").fill("Summarize the current page in three words.");
+  await popup.locator("#sendButton").click();
+  await expect(popup.locator("#response")).toHaveText("Fallback works", { timeout: 10000 });
+
+  await popup.evaluate(async () => {
+    await chrome.storage.local.remove(["forceTabUrlPrefix", "forceTabId"]);
+    await chrome.storage.sync.remove(["preferredProvider"]);
+  });
+
+  await context.close();
+});
+
+test("keeps manual ollama selection when offline after auto-switch", async () => {
+  test.setTimeout(30000);
+  const extensionPath = path.resolve(__dirname, "../../src");
+
+  const context = await chromium.launchPersistentContext("", {
+    headless: process.env.HEADLESS === "1",
+    args: [
+      `--disable-extensions-except=${extensionPath}`,
+      `--load-extension=${extensionPath}`,
+    ],
+  });
+
+  await context.route("http://localhost:11434/api/tags", async (route) => {
+    await route.abort("connectionrefused");
+  });
+
+  let [serviceWorker] = context.serviceWorkers();
+  if (!serviceWorker) {
+    serviceWorker = await context.waitForEvent("serviceworker");
+  }
+  const extensionId = new URL(serviceWorker.url()).host;
+  const popup = await context.newPage();
+  await popup.addInitScript(() => {
+    class MockSession {
+      async *promptStreaming() {
+        yield "unused";
+      }
+      async destroy() {}
+    }
+
+    globalThis.LanguageModel = {
+      availability: async () => "available",
+      create: async () => new MockSession(),
+    };
+  });
+  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+
+  await expect(popup.locator("#providerSelect")).toHaveValue("chromeBuiltIn");
+  await popup.locator("#providerSelect").selectOption("ollama");
+  await expect(popup.locator("#providerSelect")).toHaveValue("ollama");
+  await expect(popup.locator("#statusText")).toContainText("Ollama is not reachable");
   await expect(popup.locator("#sendButton")).toBeDisabled();
 
   await popup.evaluate(async () => {
