@@ -120,7 +120,7 @@ HEADLESS=1 pnpm run e2e
 
 ## Roadmap Tasks
 
-Backlog specs live under [`tasks/`](tasks/) and feature work items under [`tasks/feats/`](tasks/feats/).
+Backlog specs live under [`.llm/backlog/`](.llm/backlog/) and feature work items under [`.llm/backlog/feats/`](.llm/backlog/feats/).
 
 ## License
 
