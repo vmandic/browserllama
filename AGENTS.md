@@ -2,7 +2,7 @@
 
 This file defines project-level AI conventions and should be respected by any coding agent operating in this repository.
 
-## LLM instructions, rules, skills, commands, and backlog
+## LLM instructions, rules, skills, commands, backlog, and lessons
 
 - **Root**: All LLM-related configuration lives under **`.llm/`** at the project root.
 - **Rules** (`.llm/rules/`) – always-on project conventions:
@@ -15,10 +15,13 @@ This file defines project-level AI conventions and should be respected by any co
   - `create_task_files` – create backlog task files under `.llm/backlog/` using the project templates.
   - `create_llm_rule` – add or update a `.llm/rules/*.mdc` file.
   - `create_llm_command` – add a new `.llm/commands/*.mdc` command.
+  - `create_lesson` (`create-lesson`) – create a `.llm/lessons/<number>-<topic>.md` file to capture reusable learnings from user chats/prompts.
 - **Commands** (`.llm/commands/`) – invocable workflows for the AI assistant:
   - `review-code.mdc` – smart senior JS code review flow that applies the rules above and runs build/lint/tests.
 - **Backlog** (`.llm/backlog/`) – project task specs grouped by type:
   - Subdirs: `bugs/`, `feats/`, `chores/`, `llm/`, `tech/` plus `.llm/backlog/README.md` describing the format.
+- **Lessons** (`.llm/lessons/`) – reusable implementation learnings captured from user chats and prompts when it is useful for future agents.
+  - Use the `create_lesson` skill (`.llm/skills/create_lesson/SKILL.md`) for filename conventions, required sections, and validation rules.
 
 ## Cursor integration (symlinks)
 
