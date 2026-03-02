@@ -36,8 +36,8 @@ The fixed model list can drift from what is actually installed on the user machi
 - [ ] Confirm current storage keys (`preferredModel`, `preferredProvider`, `ollamaServer`) and their defaults.
 - [ ] Record current Ollama status logic and identify where to avoid duplicate fetch logic.
 - [ ] Re-check task and implementation context before coding in case repository state has changed.
-- [ ] Review task evolution via `git log --follow -- tasks/feats/feat-4_scan_installed_ollama_models.md`.
-- [ ] Confirm latest edit timestamp via `git log -1 --format=%cI -- tasks/feats/feat-4_scan_installed_ollama_models.md`.
+- [ ] Review task evolution via `git log --follow -- .llm/backlog/feats/feat-4_scan_installed_ollama_models.md`.
+- [ ] Confirm latest edit timestamp via `git log -1 --format=%cI -- .llm/backlog/feats/feat-4_scan_installed_ollama_models.md`.
 - [ ] Adjust implementation steps if there is drift between task intent and current code.
 
 # LLM implementation checklist

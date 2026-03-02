@@ -10,4 +10,4 @@ Use subdirectories by task type:
 - `llm/`: stories specifically for improving the LLM experience (docs, commands, rules, workflows)
 - `tech/`: stories for technical experiments and other work not covered above
 
-Task files are standard Markdown files created from the templates and naming rules defined in `.llm/rules/creating_tasks.mdc`.
+Task files are standard Markdown files created from the templates and naming rules defined in `.llm/skills/create_task_files/SKILL.md`.

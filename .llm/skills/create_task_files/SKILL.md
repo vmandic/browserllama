@@ -1,35 +1,36 @@
----
-description: This rule is applied when a LLM agent is asked to create a new task file in the project backlog
-alwaysApply: false
----
-# How to Create Task Files
+# Skill: Create task files (backlog)
 
-## Location
-All task files must be created under `tasks/` at the project root.
+Use this skill when you need to create a new backlog task under `.llm/backlog/` (bug/feature/chore/llm/tech) in this repository.
 
-Use this exact task-type mapping:
+## Location and mapping
+
+All task files must be created under `.llm/backlog/` at the project root.
 
 | Task type | Directory | Filename prefix |
 | --- | --- | --- |
-| Bug | `tasks/bugs/` | `bugfix-` |
-| Feature | `tasks/feats/` | `feat-` |
-| Chore | `tasks/chores/` | `chore-` |
-| LLM | `tasks/llm/` | `llm-` |
-| Tech | `tasks/tech/` | `tech-` |
+| Bug | `.llm/backlog/bugs/` | `bugfix-` |
+| Feature | `.llm/backlog/feats/` | `feat-` |
+| Chore | `.llm/backlog/chores/` | `chore-` |
+| LLM | `.llm/backlog/llm/` | `llm-` |
+| Tech | `.llm/backlog/tech/` | `tech-` |
 
-## Task Storage Format
+## Storage format
+
 Tasks can be stored in one of two formats:
 
-1. Single Markdown file task.
-2. Task directory package (for attachments, images, assets, notes).
+1. **Single Markdown file task**.
+2. **Task directory package** (for attachments, images, assets, notes).
 
-If a task directory package is used:
-- Directory name must follow the same naming convention as task files, but without `.md`.
+If using a task directory package:
+
+- Directory name follows the same naming convention as task files, but without `.md`.
 - A required primary Markdown file must exist at `<task-dir>/README.md`.
 - Optional supporting files may be added in subfolders (for example: `assets/`, `images/`, `attachments/`).
 
-## Filename Convention
+## Naming convention
+
 Task files must use these filename templates:
+
 - `bugfix-1_<title>.md`
 - `feat-1_<title>.md`
 - `chore-1_<title>.md`
@@ -37,6 +38,7 @@ Task files must use these filename templates:
 - `tech-1_<title>.md`
 
 Task directories must use these directory name templates:
+
 - `bugfix-1_<title>/`
 - `feat-1_<title>/`
 - `chore-1_<title>/`
@@ -44,21 +46,24 @@ Task directories must use these directory name templates:
 - `tech-1_<title>/`
 
 Rules:
+
 - Use only the mapped prefix for the selected task type.
 - Use a positive integer number (`1`, `2`, ...); no zero-padding.
 - Add a short title segment after the number.
 - Title segment must be lowercase with words separated by underscores.
 - Title segment must be at most 6 words.
-- Keep the `.md` extension.
+- Keep the `.md` extension for file tasks.
 - Do not add suffixes, extra words, or dates in the filename.
 
 Sequence rules:
+
 - Numbering is scoped by prefix within its task directory.
 - New task uses the next available number for that prefix.
 - Do not reuse or renumber existing task files.
 - File and directory task formats share the same sequence space.
 
-## File Content Template
+## File content templates
+
 All task files are Markdown files and must include these sections:
 
 - `# Created at (UTC)`
@@ -71,14 +76,12 @@ All task files are Markdown files and must include these sections:
 - `# LLM implementation checklist`
 
 Bug task exception:
+
 - Bug task files must include `# How to reproduce`.
 - For bug tasks, include `# How to reproduce` before `# How`.
-- Heading names must match exactly (same spelling and capitalization).
-- The `# Title` value must match the filename title segment in human-readable form.
-- `# Created at (UTC)` must use ISO 8601 UTC format (example: `2026-02-15T13:45:00Z`).
-- Task spec edit history must be reviewed via git before implementation.
 
-## Standard Template (feat/chore/llm/tech)
+### Standard template (feat/chore/llm/tech)
+
 ```markdown
 # Created at (UTC)
 2026-02-15T13:45:00Z
@@ -110,7 +113,8 @@ Initial UI and UX improvements
 - [ ] Keep checklist task-specific (do not use only generic wording).
 ```
 
-## Bug Template
+### Bug template
+
 ```markdown
 # Created at (UTC)
 2026-02-15T13:45:00Z
@@ -145,7 +149,8 @@ Fix popup status indicator encoding
 - [ ] Check test coverage, cover and fix what is required, run tests so they pass.
 ```
 
-## Creation Workflow
+## Creation workflow
+
 1. Determine the task type (bug, feature, chore, llm, tech).
 2. Map the type to directory and prefix using the table above.
 3. Choose storage format: single Markdown file or task directory package.
@@ -160,7 +165,8 @@ Fix popup status indicator encoding
 10. Fill required headings using the correct template.
 11. If type is bug, include `# How to reproduce` before `# How`.
 
-## Writing Guidelines
+## Writing guidelines
+
 - Keep content concise and actionable.
 - `# Title`: short human-readable task title matching the filename suffix.
 - `# Created at (UTC)`: creation timestamp only; do not overwrite later.
@@ -173,13 +179,15 @@ Fix popup status indicator encoding
 - For bugs, `# How to reproduce` should include deterministic repro steps.
 - Do not add a manual "last edited" field; use git history as the source of truth for task edits.
 
-## Security and Path Rules
-- Never include absolute local filesystem paths in task files.
-- Use repository-root-relative paths only (for example: `src/popup.html`, `tasks/feats/feat-1_initial_ui_ux_improvements.md`).
-- Do not include user home paths, machine-specific paths, or OS-specific absolute roots (for example: `/absolute/path/...`, `D:\absolute\path\...`).
+## Security and path rules
 
-## Validation Checklist
-- File is in the correct `tasks/<type>/` directory.
+- Never include absolute local filesystem paths in task files.
+- Use repository-root-relative paths only (for example: `src/popup.html`, `.llm/backlog/feats/feat-1_initial_ui_ux_improvements.md`).
+- Do not include user home paths, machine-specific paths, or OS-specific absolute roots (for example: `/absolute/path/...`, `D:\\absolute\\path\\...`).
+
+## Validation checklist
+
+- File is in the correct `.llm/backlog/<type>/` directory.
 - Task is either:
   - file: `<prefix>-N_<title>.md`, or
   - directory: `<prefix>-N_<title>/README.md` exists.

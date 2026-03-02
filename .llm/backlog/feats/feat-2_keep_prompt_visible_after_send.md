@@ -35,8 +35,8 @@ The current flow clears the prompt input on send, which removes conversation con
 - [ ] Confirm where input is currently cleared and how response placeholder state is handled.
 - [ ] Record constraints before coding (minimal edits, no dependency changes, preserve current behavior).
 - [ ] Re-check current repository state before implementation in case task or popup files changed.
-- [ ] Review task evolution via `git log --follow -- tasks/feats/feat-2_keep_prompt_visible_after_send.md`.
-- [ ] Confirm latest edit timestamp via `git log -1 --format=%cI -- tasks/feats/feat-2_keep_prompt_visible_after_send.md`.
+- [ ] Review task evolution via `git log --follow -- .llm/backlog/feats/feat-2_keep_prompt_visible_after_send.md`.
+- [ ] Confirm latest edit timestamp via `git log -1 --format=%cI -- .llm/backlog/feats/feat-2_keep_prompt_visible_after_send.md`.
 - [ ] Adjust implementation steps if repository context has drifted.
 
 # LLM implementation checklist

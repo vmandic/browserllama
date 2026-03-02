@@ -32,8 +32,8 @@ The current popup works functionally but feels raw and inconsistent, which reduc
 - [ ] Gather related extension context from `src/background.js` and `src/manifest.json`.
 - [ ] Record implementation constraints in this task before coding (MV3, no new dependencies, minimal safe edits).
 - [ ] Before implementation starts, re-check current files and behavior to detect drift from this task definition.
-- [ ] Review task evolution using `git log --follow -- tasks/feats/feat-1_initial_ui_ux_improvements.md`.
-- [ ] Confirm latest edit timestamp using `git log -1 --format=%cI -- tasks/feats/feat-1_initial_ui_ux_improvements.md`.
+- [ ] Review task evolution using `git log --follow -- .llm/backlog/feats/feat-1_initial_ui_ux_improvements.md`.
+- [ ] Confirm latest edit timestamp using `git log -1 --format=%cI -- .llm/backlog/feats/feat-1_initial_ui_ux_improvements.md`.
 - [ ] Adjust execution plan if repository state differs from recorded context.
 
 # LLM implementation checklist
