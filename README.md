@@ -20,7 +20,7 @@ This page includes setup guides, troubleshooting, and FAQ links with section anc
 
 ## Screenshot
 
-![Browserllama popup](src/images/screenshot.jpg)
+![Browserllama extension popup](src/images/browserllama_extension_screenshot.png)
 
 ## Features
 
