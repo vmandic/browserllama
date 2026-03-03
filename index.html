@@ -183,6 +183,22 @@
             line-height: 1.2;
         }
 
+        .screenshot-frame {
+            margin-top: 18px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #f8fbff;
+            padding: 10px;
+            box-shadow: 0 8px 20px rgba(13, 30, 52, 0.08);
+        }
+
+        .screenshot-frame img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 10px;
+        }
+
         .anchor {
             text-decoration: none;
             color: inherit;
@@ -279,6 +295,7 @@
         <div class="topbar-inner">
             <div class="brand">Browserllama</div>
             <nav class="nav" aria-label="Main">
+                <a href="#screenshot">Screenshot</a>
                 <a href="#features">Features</a>
                 <a href="#setup">Setup</a>
                 <a href="#troubleshooting">Troubleshooting</a>
@@ -298,6 +315,14 @@
                 <a class="btn btn-primary" href="#setup">Start Setup</a>
                 <a class="btn btn-secondary" href="#troubleshooting">Fix Common Issues</a>
             </div>
+        </section>
+
+        <section class="section" id="screenshot">
+            <h2><a class="anchor" href="#screenshot">Screenshot</a></h2>
+            <p class="lead">Current Browserllama popup UI.</p>
+            <figure class="screenshot-frame">
+                <img src="src/images/screenshot.jpg" alt="Browserllama extension popup screenshot">
+            </figure>
         </section>
 
         <section class="section" id="features">
