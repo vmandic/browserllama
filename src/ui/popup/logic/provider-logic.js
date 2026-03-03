@@ -33,14 +33,22 @@ export function createProviderLogic(deps) {
             return;
         }
 
+        const hadLoadedModels = state.ollamaReady && dom.modelSelect.options.length > 0;
+        if (!hadLoadedModels) {
+            state.ollamaReady = false;
+            setModelOptions(dom.modelSelect, []);
+            setStatus(dom.statusDiv, dom.statusText, false, "Checking Ollama models...");
+        } else {
+            setStatus(dom.statusDiv, dom.statusText, true, "Refreshing Ollama models...");
+        }
+        refreshControlsAvailability();
+
         const result = await getOllamaModels();
         if (isStaleProviderStateRequest(requestId)) {
             return;
         }
 
         if (!result.isRunning) {
-            state.ollamaReady = false;
-            setModelOptions(dom.modelSelect, []);
             const chromeAvailability = await getChromeBuiltInAvailability();
             if (isStaleProviderStateRequest(requestId)) {
                 return;
@@ -54,8 +62,7 @@ export function createProviderLogic(deps) {
                 setChromeBuiltInStatus(
                     dom.statusDiv,
                     dom.statusText,
-                    true,
-                    "Ollama is unavailable. Switched to Chrome built-in AI."
+                    true
                 );
                 refreshControlsAvailability();
                 return;

@@ -103,6 +103,33 @@ async function closeExtensionContext(handle) {
   fs.rmSync(handle.userDataDir, { recursive: true, force: true });
 }
 
+test("opens popup and renders base UI", async () => {
+  test.setTimeout(30000);
+  const extensionPath = path.resolve(__dirname, "../../src");
+
+  const extension = await launchExtensionContext(extensionPath);
+  const { context, extensionId } = extension;
+  const popup = await context.newPage();
+
+  await popup.addInitScript(() => {
+    try {
+      delete globalThis.LanguageModel;
+    } catch (error) {
+      globalThis.LanguageModel = undefined;
+    }
+    globalThis.ai = undefined;
+  });
+
+  await popup.goto(`chrome-extension://${extensionId}/${popupPath}`);
+
+  await expect(popup.locator("main.popup")).toBeVisible();
+  await expect(popup.locator("#userInput")).toBeVisible();
+  await expect(popup.locator("#providerSelect")).toBeVisible();
+  await expect(popup.locator("#sendButton")).toBeVisible();
+
+  await closeExtensionContext(extension);
+});
+
 test("answers questions based on current page content", async () => {
   test.setTimeout(60000);
   const extensionPath = path.resolve(__dirname, "../../src");
@@ -406,6 +433,71 @@ test("keeps manual ollama selection when offline after auto-switch", async () =>
 
   await popup.evaluate(async () => {
     await chrome.storage.sync.remove(["preferredProvider"]);
+  });
+
+  await closeExtensionContext(extension);
+});
+
+test("rechecks ollama models on provider switch after offline startup", async () => {
+  test.setTimeout(30000);
+  const extensionPath = path.resolve(__dirname, "../../src");
+  let ollamaTagsRequestCount = 0;
+  let ollamaOnline = false;
+
+  const extension = await launchExtensionContext(extensionPath);
+  const { context, extensionId } = extension;
+
+  await context.route("http://localhost:11434/api/tags", async (route) => {
+    ollamaTagsRequestCount += 1;
+    if (!ollamaOnline) {
+      await route.abort("connectionrefused");
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        models: [
+          { name: "deepseek-r1:1.5b" },
+          { name: "qwen2.5:3b" },
+        ],
+      }),
+    });
+  });
+
+  const popup = await context.newPage();
+  await popup.addInitScript(() => {
+    class MockSession {
+      async *promptStreaming() {
+        yield "unused";
+      }
+      async destroy() {}
+    }
+
+    globalThis.LanguageModel = {
+      availability: async () => "available",
+      create: async () => new MockSession(),
+    };
+  });
+  await popup.goto(`chrome-extension://${extensionId}/${popupPath}`);
+
+  await expect(popup.locator("#providerSelect")).toHaveValue("chromeBuiltIn");
+  await expect(popup.locator("#statusText")).toContainText("Chrome built-in AI is ready");
+
+  ollamaOnline = true;
+  await popup.locator("#providerSelect").selectOption("ollama");
+  await expect(popup.locator("#providerSelect")).toHaveValue("ollama");
+  await expect(popup.locator("#statusText")).toContainText("Connected to Ollama");
+  await expect(popup.locator("#modelSelect")).toBeEnabled();
+  await expect(popup.locator("#sendButton")).toBeEnabled();
+
+  const modelOptions = await popup.locator("#modelSelect option").allTextContents();
+  expect(modelOptions).toContain("deepseek-r1:1.5b");
+  expect(modelOptions).toContain("qwen2.5:3b");
+  expect(ollamaTagsRequestCount).toBeGreaterThanOrEqual(2);
+
+  await popup.evaluate(async () => {
+    await chrome.storage.sync.remove(["preferredProvider", "preferredModel"]);
   });
 
   await closeExtensionContext(extension);
