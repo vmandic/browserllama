@@ -3,6 +3,10 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 
+const manifestPath = path.resolve(__dirname, "../../src/manifest.json");
+const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+const popupPath = (manifest.action && manifest.action.default_popup) || "popup.html";
+
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -137,7 +141,7 @@ test("answers questions based on current page content", async () => {
   await contentPage.goto(fixtureUrl);
 
   const popup = await context.newPage();
-  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+  await popup.goto(`chrome-extension://${extensionId}/${popupPath}`);
 
   await expect(popup.locator("#sendButton")).toBeVisible();
   await popup.evaluate(async (urlPrefix) => {
@@ -200,7 +204,7 @@ test("keeps popup stable when Ollama is offline", async () => {
     }
     globalThis.ai = undefined;
   });
-  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+  await popup.goto(`chrome-extension://${extensionId}/${popupPath}`);
 
   await expect(popup.locator("#statusText")).toContainText("Ollama is not reachable");
   await expect(popup.locator("#sendButton")).toBeDisabled();
@@ -245,7 +249,7 @@ test("answers using Chrome built-in provider when LanguageModel is available", a
       create: async () => new MockSession(),
     };
   });
-  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+  await popup.goto(`chrome-extension://${extensionId}/${popupPath}`);
 
   await expect(popup.locator("#sendButton")).toBeVisible();
   await popup.evaluate(async (urlPrefix) => {
@@ -287,7 +291,7 @@ test("shows unsupported status when Chrome built-in AI is unavailable", async ()
     }
     globalThis.ai = undefined;
   });
-  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+  await popup.goto(`chrome-extension://${extensionId}/${popupPath}`);
 
   await popup.locator("#providerSelect").selectOption("chromeBuiltIn");
   await expect(popup.locator("#statusText")).toContainText("not available");
@@ -340,7 +344,7 @@ test("auto-switches to Chrome built-in when Ollama is offline", async () => {
       create: async () => new MockSession(),
     };
   });
-  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+  await popup.goto(`chrome-extension://${extensionId}/${popupPath}`);
 
   await popup.evaluate(async (urlPrefix) => {
     const tabs = await chrome.tabs.query({});
@@ -392,7 +396,7 @@ test("keeps manual ollama selection when offline after auto-switch", async () =>
       create: async () => new MockSession(),
     };
   });
-  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+  await popup.goto(`chrome-extension://${extensionId}/${popupPath}`);
 
   await expect(popup.locator("#providerSelect")).toHaveValue("chromeBuiltIn");
   await popup.locator("#providerSelect").selectOption("ollama");
