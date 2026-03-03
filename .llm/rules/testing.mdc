@@ -9,8 +9,14 @@ This rule defines when to run tests and how to report results so test-related be
 ## When to Run Tests
 
 - After changing **extension or lib code** (`src/`): run **`pnpm test`** (unit tests). Report pass/fail and any failure output.
-- If the change touches **UI or end-to-end flows** (popup, background messaging, content): also run **`pnpm run e2e`**. Use `HEADLESS=1 pnpm run e2e` when headless is preferred. Report pass/fail and any failure output.
+- If the change touches **UI or end-to-end flows** (popup, background messaging, content): also run **`pnpm run e2e`** (headed preferred for this repo). `HEADLESS=1 pnpm run e2e` is optional and can be unstable for MV3 extension startup; report that caveat when relevant.
 - Do not skip running tests when you have changed code that could be covered by existing tests.
+
+## E2E Execution Caveat
+
+- For this repository, Playwright extension e2e runs are most reliable in **headed** mode (`pnpm run e2e`).
+- Headless mode (`HEADLESS=1`) may fail due to Chromium/MV3 extension launch timing even when headed runs pass.
+- If headless fails but headed passes, report this explicitly as an environment caveat rather than mislabeling it as an application regression.
 
 ## When Tests Do Not Exist
 

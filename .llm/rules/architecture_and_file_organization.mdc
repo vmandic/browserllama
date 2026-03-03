@@ -1,0 +1,50 @@
+---
+description: Apply when editing extension code structure or adding new code files; enforces project architecture boundaries, naming, and file placement.
+alwaysApply: true
+---
+# Architecture and File Organization
+
+Use this rule for all extension code changes so structure stays consistent and scalable.
+
+## Layers and Responsibilities
+
+- Keep architecture limited to:
+  - UI rendering (`src/ui/popup/components/*-view.js`)
+  - UI logic (`src/ui/popup/logic/*-logic.js`)
+  - Providers (`src/ui/popup/providers/*-provider.js`)
+  - Services (`src/ui/popup/services/*-service.js`, `src/background/*-service.js`)
+- Keep `src/background.js` and `src/ui/popup/main.js` as thin entry/bootstrap files.
+- Do not introduce controller/MVC layers unless explicitly requested.
+
+## Naming
+
+- Provider files must end with `-provider.js`.
+- Service files must end with `-service.js`.
+- Rendering helpers should use `*-view.js` naming.
+- Popup orchestration files should use `*-logic.js` naming.
+
+## Boundaries
+
+- Providers call provider-specific APIs only (Ollama/Chrome built-in).
+- Services contain shared data access or integration logic (storage, tab context, message routing).
+- UI view modules render state; they should not own provider/network logic.
+- UI logic modules coordinate flows and call providers/services.
+
+## Prompt Security Invariants
+
+- Keep prompt steering, prompt-injection detection, and refusal helpers centralized in `src/lib/ollama.js`.
+- Do not duplicate or fork guardrail policy logic across provider files.
+- Preserve popup guardrail enforcement order:
+  1. provider readiness checks
+  2. page context capture
+  3. `isUnexpectedPromptForWebInterpreter` policy check
+  4. refusal response when blocked
+  5. guarded prompt build
+  6. provider generation call
+- Keep response sanitation with `cleanResponseText` for all provider paths.
+
+## Documentation and Tests
+
+- When file organization changes, update `README.md` structure documentation.
+- Keep e2e popup path usage aligned with `src/manifest.json` `action.default_popup`.
+- Preserve or update unit tests that validate prompt guardrail behavior.
