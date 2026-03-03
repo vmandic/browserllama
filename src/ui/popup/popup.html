@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browserllama</title>
+    <link rel="stylesheet" href="./popup.css">
+</head>
+<body>
+    <main class="popup">
+        <header class="header">
+            <h1 class="title">Browserllama</h1>
+            <p class="subtitle">
+                <a
+                    class="subtitle-link"
+                    href="https://vmandic.github.io/browserllama/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >Read setup guide</a>
+            </p>
+        </header>
+
+        <section id="status" class="status" aria-live="polite">
+            <span id="statusIndicator" class="status-dot" aria-hidden="true"></span>
+            <span id="statusText">Checking provider status...</span>
+        </section>
+
+        <div id="composeWrap" class="compose-wrap">
+            <div class="field">
+                <label class="label" for="userInput">Prompt</label>
+                <textarea id="userInput" placeholder="Ask something about the current page..."></textarea>
+            </div>
+
+            <div class="field">
+                <label class="label" for="providerSelect">Provider</label>
+                <select id="providerSelect">
+                    <option value="ollama">Ollama</option>
+                    <option value="chromeBuiltIn">Chrome built-in AI</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label class="label" for="modelSelect">Model</label>
+                <select id="modelSelect"></select>
+            </div>
+
+            <button id="sendButton" type="button">Send</button>
+        </div>
+
+        <div id="responseWrap" class="response-wrap is-hidden">
+            <span class="label">Last prompt</span>
+            <pre id="lastPrompt" class="is-placeholder">No prompt sent yet.</pre>
+            <span class="label">Response</span>
+            <pre id="response" class="is-placeholder">Response will appear here.</pre>
+            <button id="newPromptButton" class="secondary-button is-hidden" type="button">New prompt</button>
+        </div>
+    </main>
+    <script src="../../lib/ollama.js"></script>
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
