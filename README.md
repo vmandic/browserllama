@@ -30,6 +30,53 @@ This page includes setup guides, troubleshooting, and FAQ links with section anc
 - Compact popup workflow with prompt/response history.
 - Fallback docs link in the popup header.
 
+## Code Structure
+
+Current extension code is organized by feature boundaries and naming conventions.
+
+- Providers end with `-provider.js`.
+- Services end with `-service.js`.
+- Prompt steering and injection checks stay centralized in `src/lib/ollama.js`.
+
+```text
+src/	- extension source root
+├── background.js	- thin service-worker entry that wires background services
+├── background/	- background service modules
+│   ├── storage-service.js	- reads synced extension preferences
+│   ├── ollama-service.js	- Ollama HTTP calls and response normalization
+│   ├── icon-status-service.js	- action icon/title status updates
+│   ├── tab-context-service.js	- active-tab tracking and text extraction
+│   └── message-router-service.js	- runtime message action routing
+├── lib/
+│   └── ollama.js	- shared prompt building, guardrails, injection checks, response cleaning
+└── ui/
+    └── popup/	- popup UI entry and modules
+        ├── popup.html	- popup markup entry
+        ├── popup.css	- popup styles
+        ├── main.js	- popup bootstrap and event wiring
+        ├── dom.js	- required DOM node resolution
+        ├── state.js	- mutable popup state shape
+        ├── components/
+        │   ├── compose-view.js	- compose and control rendering helpers
+        │   ├── response-view.js	- response/prompt rendering helpers
+        │   └── status-view.js	- provider status rendering helpers
+        ├── logic/
+        │   ├── prompt-logic.js	- prompt lifecycle orchestration
+        │   └── provider-logic.js	- provider readiness orchestration
+        ├── providers/
+        │   ├── chrome-built-in-provider.js	- Chrome built-in generation API integration
+        │   └── ollama-provider.js	- Ollama generation/model API integration
+        └── services/
+            ├── page-context-service.js	- active-page capture helpers
+            └── popup-storage-service.js	- popup storage read/write helpers
+
+tests/	- automated test suites
+├── unit/
+│   └── ollama.test.mjs	- shared helper and guardrail unit tests
+└── e2e/
+    └── extension.spec.js	- end-to-end extension flow tests
+```
+
 ## Quick Start
 
 ### 1) Clone and install
