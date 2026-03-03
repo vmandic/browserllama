@@ -27,7 +27,7 @@ export function setChromeBuiltInStatus(statusDiv, statusText, isReady, detailTex
     statusDiv.classList.remove("is-online", "is-offline");
     if (isReady === true) {
         statusDiv.classList.add("is-online");
-        statusText.textContent = "Chrome built-in AI is ready";
+        statusText.textContent = detailText || "Chrome built-in AI is ready";
         return;
     }
     statusDiv.classList.add("is-offline");

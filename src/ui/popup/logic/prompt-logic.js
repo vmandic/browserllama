@@ -35,14 +35,6 @@ export function createPromptLogic(deps) {
     }
 
     /**
-     * Return to compose mode after request error.
-     */
-    function restoreComposeAfterError() {
-        setComposeMode(dom.composeWrap, dom.newPromptButton, true, false);
-        setNewPromptButtonState(dom.newPromptButton, false);
-    }
-
-    /**
      * Cancel the active request and restore compose state.
      * @returns {Promise<void>}
      */
@@ -185,7 +177,6 @@ export function createPromptLogic(deps) {
                 setResponse(dom.responseDiv, `Error: ${error.message}`);
                 console.error("Error:", error);
             }
-            restoreComposeAfterError();
         } finally {
             state.activeRequest = null;
             state.isSending = false;

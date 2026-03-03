@@ -64,7 +64,23 @@
             });
 
             if (!res.ok) {
-                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                let responseText = "";
+                try {
+                    responseText = (await res.text()).trim();
+                } catch (error) {
+                    responseText = "";
+                }
+
+                if (res.status === 403) {
+                    const guidance = "Ollama denied this request (HTTP 403). Allow this extension origin in Ollama, for example: OLLAMA_ORIGINS=\"chrome-extension://*\".";
+                    if (responseText) {
+                        throw new Error(`${guidance} Details: ${responseText}`);
+                    }
+                    throw new Error(guidance);
+                }
+
+                const details = responseText ? `: ${responseText}` : "";
+                throw new Error(`HTTP ${res.status}: ${res.statusText}${details}`);
             }
 
             return res.json();
