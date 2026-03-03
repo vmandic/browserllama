@@ -113,7 +113,7 @@ async function checkOllamaStatus(serverOverride = null) {
             path: {
                 "16": "icons/circle-red-16.png",
                 "32": "icons/circle-red-32.png",
-                "128": "icons/circle-red-128.png"
+                "192": "icons/circle-red-192.png"
             }
         });
     } catch (iconError) {

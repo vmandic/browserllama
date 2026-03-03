@@ -21,15 +21,20 @@ Use exactly one of these prefixes (lowercase):
 - **fix** – Bug fix (user-facing or behavioral).
 - **bugfix** – Same as fix; use for consistency if the project prefers it.
 - **refactor** – Code change that neither fixes a bug nor adds a feature (restructure, rename, simplify).
-- **improvement** – Enhancement of existing behavior or code quality (non-breaking).
 - **chore** – Maintenance: deps, config, tooling, no code behavior change.
 - **tech** – Technical or internal change (e.g. scripts, CI, build).
 - **docs** – Documentation only (README, AGENTS.md, comments, .llm rules).
+- **llm** – Changes implementing tasks from `.llm/backlog/llm/`.
 
 Task-scoped IDs:
 - You may append a task number to any allowed type using `-<number>`.
 - Example: `feat-1: ...`, `chore-2: ...`, `docs-3: ...`.
 - Task numbers are plain integers (no zero-padding).
+
+Backlog-linked commits:
+- If work is implemented from a backlog story file, commit titles must be task-scoped (`type-<number>: summary`).
+- Use the same number as the backlog story filename (for example: `.llm/backlog/llm/llm-1_...` -> `llm-1: ...`).
+- For `.llm/backlog/llm/` stories, prefer `llm-<number>: ...` commit titles.
 
 ## Organizing changes into commits
 

@@ -487,6 +487,11 @@ document.addEventListener("DOMContentLoaded", function() {
             if (requestState.cancelled) {
                 throw new Error("Request cancelled.");
             }
+            if (Browserllama.isUnexpectedPromptForWebInterpreter(prompt)) {
+                setResponse(responseDiv, Browserllama.getOffScopeRefusalMessage());
+                completeResponseCycle();
+                return;
+            }
             const pageText = pageData.text || "";
             const limitedPageText = trimPageContext(pageText);
             const paragraphs = Array.isArray(pageData.paragraphs) ? pageData.paragraphs : [];
@@ -522,15 +527,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 completeResponseCycle();
                 return;
             }
-            const fullPrompt = [
-                "Use ONLY the text inside <page>...</page> to answer the question.",
-                "Do not use any other words in this prompt when deciding the answer.",
-                "<page>",
-                limitedPageText,
-                "</page>",
-                "Question:",
-                prompt
-            ].join("\n");
+            const fullPrompt = Browserllama.buildWebInterpreterPrompt({
+                pageText: limitedPageText,
+                userPrompt: prompt
+            });
 
             if (provider === "chromeBuiltIn") {
                 const rawResponse = await generateWithChromeBuiltIn(fullPrompt, (partialText) => {

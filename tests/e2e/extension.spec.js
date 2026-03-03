@@ -1,6 +1,103 @@
 const { test, expect, chromium } = require("@playwright/test");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function readExtensionIdFromProfile(userDataDir) {
+  const extensionsDir = path.join(userDataDir, "Default", "Extensions");
+  if (!fs.existsSync(extensionsDir)) {
+    return null;
+  }
+  const candidates = fs
+    .readdirSync(extensionsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => /^[a-p]{32}$/.test(name));
+  return candidates[0] || null;
+}
+
+async function waitForExtensionId(userDataDir, timeoutMs = 15000) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    const extensionId = readExtensionIdFromProfile(userDataDir);
+    if (extensionId) {
+      return extensionId;
+    }
+    await delay(100);
+  }
+  throw new Error(
+    "Timed out waiting for extension id in Chromium profile. Extension may not have loaded."
+  );
+}
+
+async function waitForExtensionIdFromServiceWorker(context, timeoutMs = 10000) {
+  let [serviceWorker] = context.serviceWorkers();
+  if (!serviceWorker) {
+    serviceWorker = await context.waitForEvent("serviceworker", { timeout: timeoutMs });
+  }
+  return new URL(serviceWorker.url()).host;
+}
+
+async function launchExtensionContext(extensionPath) {
+  const isHeadless = process.env.HEADLESS === "1";
+  const requestedChannel = process.env.PW_EXTENSION_CHANNEL || (isHeadless ? "chromium" : null);
+  const channelsToTry = requestedChannel ? [requestedChannel] : [null];
+  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "browserllama-e2e-"));
+
+  let lastError = null;
+  for (const channel of channelsToTry) {
+    let context = null;
+    try {
+      context = await chromium.launchPersistentContext(userDataDir, {
+        ...(channel ? { channel } : {}),
+        headless: isHeadless,
+        ignoreDefaultArgs: ["--disable-extensions"],
+        args: [
+          `--disable-extensions-except=${extensionPath}`,
+          `--load-extension=${extensionPath}`,
+        ],
+      });
+
+      // Prefer service worker id resolution (matches original working flow),
+      // then fall back to profile inspection in case worker discovery lags.
+      let extensionId;
+      try {
+        extensionId = await waitForExtensionIdFromServiceWorker(
+          context,
+          isHeadless ? 20000 : 10000
+        );
+      } catch (serviceWorkerError) {
+        extensionId = await waitForExtensionId(userDataDir, isHeadless ? 12000 : 7000);
+      }
+      return { context, extensionId, userDataDir };
+    } catch (error) {
+      lastError = error;
+      if (context) {
+        try {
+          await context.close();
+        } catch (_) {
+          // ignore close errors during fallback
+        }
+      }
+      console.warn(
+        `Failed to launch Playwright persistent context with channel '${channel || "default"}':`,
+        error && error.message ? error.message : error
+      );
+    }
+  }
+
+  fs.rmSync(userDataDir, { recursive: true, force: true });
+  throw lastError || new Error("Failed to launch browser context for extension tests.");
+}
+
+async function closeExtensionContext(handle) {
+  await handle.context.close();
+  fs.rmSync(handle.userDataDir, { recursive: true, force: true });
+}
 
 test("answers questions based on current page content", async () => {
   test.setTimeout(60000);
@@ -10,13 +107,8 @@ test("answers questions based on current page content", async () => {
   const preferredModels = ["deepseek-r1:1.5b"];
   const fixtureUrl = "http://fixture.local/";
 
-  const context = await chromium.launchPersistentContext("", {
-    headless: process.env.HEADLESS === "1",
-    args: [
-      `--disable-extensions-except=${extensionPath}`,
-      `--load-extension=${extensionPath}`,
-    ],
-  });
+  const extension = await launchExtensionContext(extensionPath);
+  const { context, extensionId } = extension;
 
   await context.route(fixtureUrl, async (route) => {
     await route.fulfill({
@@ -44,12 +136,6 @@ test("answers questions based on current page content", async () => {
   const contentPage = await context.newPage();
   await contentPage.goto(fixtureUrl);
 
-  let [serviceWorker] = context.serviceWorkers();
-  if (!serviceWorker) {
-    serviceWorker = await context.waitForEvent("serviceworker");
-  }
-
-  const extensionId = new URL(serviceWorker.url()).host;
   const popup = await context.newPage();
   await popup.goto(`chrome-extension://${extensionId}/popup.html`);
 
@@ -91,30 +177,20 @@ test("answers questions based on current page content", async () => {
     await chrome.storage.local.remove(["e2eMode", "forceTabUrlPrefix", "forceTabId"]);
   });
 
-  await context.close();
+  await closeExtensionContext(extension);
 });
 
 test("keeps popup stable when Ollama is offline", async () => {
   test.setTimeout(30000);
   const extensionPath = path.resolve(__dirname, "../../src");
 
-  const context = await chromium.launchPersistentContext("", {
-    headless: process.env.HEADLESS === "1",
-    args: [
-      `--disable-extensions-except=${extensionPath}`,
-      `--load-extension=${extensionPath}`,
-    ],
-  });
+  const extension = await launchExtensionContext(extensionPath);
+  const { context, extensionId } = extension;
 
   await context.route("http://localhost:11434/api/tags", async (route) => {
     await route.abort("connectionrefused");
   });
 
-  let [serviceWorker] = context.serviceWorkers();
-  if (!serviceWorker) {
-    serviceWorker = await context.waitForEvent("serviceworker");
-  }
-  const extensionId = new URL(serviceWorker.url()).host;
   const popup = await context.newPage();
   await popup.addInitScript(() => {
     try {
@@ -130,7 +206,7 @@ test("keeps popup stable when Ollama is offline", async () => {
   await expect(popup.locator("#sendButton")).toBeDisabled();
   await expect(popup.locator("#modelSelect")).toBeDisabled();
 
-  await context.close();
+  await closeExtensionContext(extension);
 });
 
 test("answers using Chrome built-in provider when LanguageModel is available", async () => {
@@ -140,13 +216,8 @@ test("answers using Chrome built-in provider when LanguageModel is available", a
   const fixtureHtml = fs.readFileSync(fixturePath, "utf8");
   const fixtureUrl = "http://fixture.local/";
 
-  const context = await chromium.launchPersistentContext("", {
-    headless: process.env.HEADLESS === "1",
-    args: [
-      `--disable-extensions-except=${extensionPath}`,
-      `--load-extension=${extensionPath}`,
-    ],
-  });
+  const extension = await launchExtensionContext(extensionPath);
+  const { context, extensionId } = extension;
 
   await context.route(fixtureUrl, async (route) => {
     await route.fulfill({
@@ -159,12 +230,6 @@ test("answers using Chrome built-in provider when LanguageModel is available", a
   const contentPage = await context.newPage();
   await contentPage.goto(fixtureUrl);
 
-  let [serviceWorker] = context.serviceWorkers();
-  if (!serviceWorker) {
-    serviceWorker = await context.waitForEvent("serviceworker");
-  }
-
-  const extensionId = new URL(serviceWorker.url()).host;
   const popup = await context.newPage();
   await popup.addInitScript(() => {
     class MockSession {
@@ -203,26 +268,16 @@ test("answers using Chrome built-in provider when LanguageModel is available", a
     await chrome.storage.sync.remove(["preferredProvider"]);
   });
 
-  await context.close();
+  await closeExtensionContext(extension);
 });
 
 test("shows unsupported status when Chrome built-in AI is unavailable", async () => {
   test.setTimeout(30000);
   const extensionPath = path.resolve(__dirname, "../../src");
 
-  const context = await chromium.launchPersistentContext("", {
-    headless: process.env.HEADLESS === "1",
-    args: [
-      `--disable-extensions-except=${extensionPath}`,
-      `--load-extension=${extensionPath}`,
-    ],
-  });
+  const extension = await launchExtensionContext(extensionPath);
+  const { context, extensionId } = extension;
 
-  let [serviceWorker] = context.serviceWorkers();
-  if (!serviceWorker) {
-    serviceWorker = await context.waitForEvent("serviceworker");
-  }
-  const extensionId = new URL(serviceWorker.url()).host;
   const popup = await context.newPage();
   await popup.addInitScript(() => {
     try {
@@ -242,7 +297,7 @@ test("shows unsupported status when Chrome built-in AI is unavailable", async ()
     await chrome.storage.sync.remove(["preferredProvider"]);
   });
 
-  await context.close();
+  await closeExtensionContext(extension);
 });
 
 test("auto-switches to Chrome built-in when Ollama is offline", async () => {
@@ -252,13 +307,8 @@ test("auto-switches to Chrome built-in when Ollama is offline", async () => {
   const fixtureHtml = fs.readFileSync(fixturePath, "utf8");
   const fixtureUrl = "http://fixture.local/";
 
-  const context = await chromium.launchPersistentContext("", {
-    headless: process.env.HEADLESS === "1",
-    args: [
-      `--disable-extensions-except=${extensionPath}`,
-      `--load-extension=${extensionPath}`,
-    ],
-  });
+  const extension = await launchExtensionContext(extensionPath);
+  const { context, extensionId } = extension;
 
   await context.route(fixtureUrl, async (route) => {
     await route.fulfill({
@@ -275,12 +325,6 @@ test("auto-switches to Chrome built-in when Ollama is offline", async () => {
   const contentPage = await context.newPage();
   await contentPage.goto(fixtureUrl);
 
-  let [serviceWorker] = context.serviceWorkers();
-  if (!serviceWorker) {
-    serviceWorker = await context.waitForEvent("serviceworker");
-  }
-
-  const extensionId = new URL(serviceWorker.url()).host;
   const popup = await context.newPage();
   await popup.addInitScript(() => {
     class MockSession {
@@ -320,30 +364,20 @@ test("auto-switches to Chrome built-in when Ollama is offline", async () => {
     await chrome.storage.sync.remove(["preferredProvider"]);
   });
 
-  await context.close();
+  await closeExtensionContext(extension);
 });
 
 test("keeps manual ollama selection when offline after auto-switch", async () => {
   test.setTimeout(30000);
   const extensionPath = path.resolve(__dirname, "../../src");
 
-  const context = await chromium.launchPersistentContext("", {
-    headless: process.env.HEADLESS === "1",
-    args: [
-      `--disable-extensions-except=${extensionPath}`,
-      `--load-extension=${extensionPath}`,
-    ],
-  });
+  const extension = await launchExtensionContext(extensionPath);
+  const { context, extensionId } = extension;
 
   await context.route("http://localhost:11434/api/tags", async (route) => {
     await route.abort("connectionrefused");
   });
 
-  let [serviceWorker] = context.serviceWorkers();
-  if (!serviceWorker) {
-    serviceWorker = await context.waitForEvent("serviceworker");
-  }
-  const extensionId = new URL(serviceWorker.url()).host;
   const popup = await context.newPage();
   await popup.addInitScript(() => {
     class MockSession {
@@ -370,5 +404,5 @@ test("keeps manual ollama selection when offline after auto-switch", async () =>
     await chrome.storage.sync.remove(["preferredProvider"]);
   });
 
-  await context.close();
+  await closeExtensionContext(extension);
 });

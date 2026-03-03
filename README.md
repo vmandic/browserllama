@@ -118,6 +118,12 @@ Run e2e (headless):
 HEADLESS=1 pnpm run e2e
 ```
 
+### E2E caveat (headless)
+
+For this project, Playwright e2e tests are reliable in **headed** mode (`pnpm run e2e`), and that is the recommended way to run them.
+
+`HEADLESS=1` can be unstable with MV3 extension startup (service worker/extension load timing) and may fail even when headed runs pass.
+
 ## Roadmap Tasks
 
 Backlog specs live under [`.llm/backlog/`](.llm/backlog/) and feature work items under [`.llm/backlog/feats/`](.llm/backlog/feats/).
