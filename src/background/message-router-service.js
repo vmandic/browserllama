@@ -7,7 +7,9 @@
         initMessageRouter(deps) {
             const {
                 fetchOllamaTags,
+                fetchMlxModels,
                 generateWithOllama,
+                generateWithMlx,
                 getPageTextFromActiveTab,
                 refreshExtensionStatusIcon,
             } = deps;
@@ -33,6 +35,19 @@
                     return true;
                 }
 
+                if (request.action === "getMlxModels") {
+                    fetchMlxModels(request.server)
+                        .then((result) => sendResponse(result))
+                        .catch((error) => {
+                            sendResponse({
+                                isRunning: false,
+                                models: [],
+                                error: error.message || "Failed to query MLX models",
+                            });
+                        });
+                    return true;
+                }
+
                 if (request.action === "getActivePageText") {
                     getPageTextFromActiveTab()
                         .then((data) => sendResponse({ success: true, data }))
@@ -51,6 +66,19 @@
                             sendResponse({
                                 success: false,
                                 error: error.message || "Failed to get response from Ollama",
+                            });
+                        });
+                    return true;
+                }
+
+                if (request.action === "generateMlxResponse") {
+                    generateWithMlx(request.model, request.prompt)
+                        .then((data) => sendResponse({ success: true, data }))
+                        .catch((error) => {
+                            console.error("Error:", error);
+                            sendResponse({
+                                success: false,
+                                error: error.message || "Failed to get response from MLX",
                             });
                         });
                     return true;

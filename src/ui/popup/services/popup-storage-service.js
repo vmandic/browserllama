@@ -39,6 +39,26 @@ export function setPreferredModel(model) {
 }
 
 /**
+ * Read configured MLX server URL.
+ * @returns {Promise<string>}
+ */
+export async function getMlxServer() {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get(["mlxServer"], (result) => {
+            resolve(result.mlxServer || Browserllama.getDefaultMlxServer());
+        });
+    });
+}
+
+/**
+ * Persist MLX server URL.
+ * @param {string} server
+ */
+export function setMlxServer(server) {
+    chrome.storage.sync.set({ mlxServer: server });
+}
+
+/**
  * Read temporary selected text payload.
  * @returns {Promise<string>}
  */

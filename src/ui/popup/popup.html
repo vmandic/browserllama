@@ -35,8 +35,14 @@
                 <label class="label" for="providerSelect">Provider</label>
                 <select id="providerSelect">
                     <option value="ollama">Ollama</option>
+                    <option value="mlx">MLX (OpenAI-compatible)</option>
                     <option value="chromeBuiltIn">Chrome built-in AI</option>
                 </select>
+            </div>
+
+            <div id="mlxEndpointField" class="field is-hidden">
+                <label class="label" for="mlxServerInput">MLX endpoint</label>
+                <input id="mlxServerInput" type="text" placeholder="http://localhost:8080/v1" />
             </div>
 
             <div class="field">
@@ -55,7 +61,7 @@
             <button id="newPromptButton" class="secondary-button is-hidden" type="button">New prompt</button>
         </div>
     </main>
-    <script src="../../lib/ollama.js"></script>
+    <script src="../../lib/browserllama.js"></script>
     <script type="module" src="./main.js"></script>
 </body>
 </html>

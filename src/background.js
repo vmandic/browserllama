@@ -1,7 +1,8 @@
 importScripts(
-    "lib/ollama.js",
+    "lib/browserllama.js",
     "background/storage-service.js",
     "background/ollama-service.js",
+    "background/mlx-service.js",
     "background/icon-status-service.js",
     "background/tab-context-service.js",
     "background/message-router-service.js"
@@ -36,13 +37,40 @@ async function generateWithOllama(model, prompt, options) {
 }
 
 /**
+ * Fetch MLX models through storage + API services.
+ * @param {string|null} serverOverride
+ * @returns {Promise<{isRunning: boolean, models: string[], error: string|null}>}
+ */
+async function fetchMlxModels(serverOverride = null) {
+    return BrowserllamaMlxService.fetchMlxModels(
+        BrowserllamaStorageService.getMlxServerAddress,
+        serverOverride
+    );
+}
+
+/**
+ * Send generate request to MLX through service layer.
+ * @param {string} model
+ * @param {string} prompt
+ * @returns {Promise<object>}
+ */
+async function generateWithMlx(model, prompt) {
+    return BrowserllamaMlxService.generateWithMlx(
+        BrowserllamaStorageService.getMlxServerAddress,
+        model,
+        prompt
+    );
+}
+
+/**
  * Refresh action icon/title from provider availability.
  * @returns {Promise<void>}
  */
 async function refreshExtensionStatusIcon() {
     return BrowserllamaIconStatusService.refreshExtensionStatusIcon(
         BrowserllamaStorageService.getPreferredProvider,
-        fetchOllamaTags
+        fetchOllamaTags,
+        fetchMlxModels
     );
 }
 
@@ -65,7 +93,9 @@ setInterval(() => {
 
 BrowserllamaMessageRouterService.initMessageRouter({
     fetchOllamaTags,
+    fetchMlxModels,
     generateWithOllama,
+    generateWithMlx,
     getPageTextFromActiveTab: BrowserllamaTabContextService.getPageTextFromActiveTab,
     refreshExtensionStatusIcon,
 });

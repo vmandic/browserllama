@@ -44,11 +44,21 @@
          * Refresh icon state based on provider and Ollama reachability.
          * @param {Function} getPreferredProvider
          * @param {Function} fetchOllamaTags
+         * @param {Function} fetchMlxModels
          */
-        async refreshExtensionStatusIcon(getPreferredProvider, fetchOllamaTags) {
+        async refreshExtensionStatusIcon(getPreferredProvider, fetchOllamaTags, fetchMlxModels) {
             const provider = await getPreferredProvider();
             if (provider === "chromeBuiltIn") {
                 setActiveIconAndTitle("Using Chrome built-in AI");
+                return;
+            }
+            if (provider === "mlx") {
+                const mlxModels = await fetchMlxModels();
+                if (mlxModels.isRunning) {
+                    setActiveIconAndTitle("MLX server is running");
+                    return;
+                }
+                setOfflineIconAndTitle("MLX server is not reachable");
                 return;
             }
 

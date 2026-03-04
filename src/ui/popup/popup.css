@@ -107,6 +107,7 @@ body {
 }
 
 textarea,
+input,
 select,
 button {
     width: 100%;
@@ -117,6 +118,7 @@ button {
 }
 
 textarea,
+input,
 select {
     padding: 9px 10px;
     background: #fff;
@@ -130,6 +132,7 @@ textarea {
 }
 
 textarea:focus-visible,
+input:focus-visible,
 select:focus-visible,
 button:focus-visible {
     outline: 2px solid rgba(23, 101, 209, 0.25);

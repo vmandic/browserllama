@@ -13,6 +13,18 @@
         },
 
         /**
+         * Read configured MLX server base URL.
+         * @returns {Promise<string>}
+         */
+        async getMlxServerAddress() {
+            return new Promise((resolve) => {
+                chrome.storage.sync.get(["mlxServer"], function(result) {
+                    resolve(result.mlxServer || Browserllama.getDefaultMlxServer());
+                });
+            });
+        },
+
+        /**
          * Read preferred model key.
          * @returns {Promise<string>}
          */

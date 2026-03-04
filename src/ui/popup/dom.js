@@ -7,6 +7,8 @@ export function getPopupDom() {
     const statusText = document.getElementById("statusText");
     const composeWrap = document.getElementById("composeWrap");
     const providerSelect = document.getElementById("providerSelect");
+    const mlxServerInput = document.getElementById("mlxServerInput");
+    const mlxEndpointField = document.getElementById("mlxEndpointField");
     const modelSelect = document.getElementById("modelSelect");
     const modelField = modelSelect ? modelSelect.closest(".field") : null;
     const newPromptButton = document.getElementById("newPromptButton");
@@ -21,6 +23,8 @@ export function getPopupDom() {
         statusText,
         composeWrap,
         providerSelect,
+        mlxServerInput,
+        mlxEndpointField,
         modelSelect,
         modelField,
         newPromptButton,
@@ -40,6 +44,8 @@ export function getPopupDom() {
         statusText,
         composeWrap,
         providerSelect,
+        mlxServerInput,
+        mlxEndpointField,
         modelSelect,
         modelField,
         newPromptButton,

@@ -64,7 +64,8 @@ export function setResultsVisibility(responseWrap, isVisible) {
  * @param {string} provider
  */
 export function setModelVisibility(modelField, provider) {
-    modelField.classList.toggle("is-hidden", provider !== "ollama");
+    const requiresModelSelection = provider === "ollama" || provider === "mlx";
+    modelField.classList.toggle("is-hidden", !requiresModelSelection);
 }
 
 /**

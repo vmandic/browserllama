@@ -33,3 +33,21 @@ export function setChromeBuiltInStatus(statusDiv, statusText, isReady, detailTex
     statusDiv.classList.add("is-offline");
     statusText.textContent = detailText || "Chrome built-in AI is unavailable";
 }
+
+/**
+ * Render MLX provider status.
+ * @param {HTMLElement} statusDiv
+ * @param {HTMLElement} statusText
+ * @param {boolean} isReady
+ * @param {string} detailText
+ */
+export function setMlxStatus(statusDiv, statusText, isReady, detailText = "") {
+    statusDiv.classList.remove("is-online", "is-offline");
+    if (isReady === true) {
+        statusDiv.classList.add("is-online");
+        statusText.textContent = detailText || "MLX server is reachable";
+        return;
+    }
+    statusDiv.classList.add("is-offline");
+    statusText.textContent = detailText || "MLX server is not reachable";
+}

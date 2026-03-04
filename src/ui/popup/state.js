@@ -9,6 +9,7 @@ export function createPopupState() {
         pendingPromptText: "",
         isSending: false,
         ollamaReady: false,
+        mlxReady: false,
         chromeBuiltInReady: false,
         providerStateRequestId: 0,
     };

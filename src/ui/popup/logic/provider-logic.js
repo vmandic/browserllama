@@ -1,8 +1,14 @@
-import { setChromeBuiltInStatus, setStatus } from "../components/status-view.js";
+import { setChromeBuiltInStatus, setMlxStatus, setStatus } from "../components/status-view.js";
 import { setModelOptions, setModelVisibility } from "../components/compose-view.js";
 import { getChromeBuiltInAvailability } from "../providers/chrome-built-in-provider.js";
 import { getOllamaModels } from "../providers/ollama-provider.js";
-import { getPreferredModel, setPreferredModel, setPreferredProvider } from "../services/popup-storage-service.js";
+import { getMlxModels } from "../providers/mlx-provider.js";
+import {
+    getMlxServer,
+    getPreferredModel,
+    setPreferredModel,
+    setPreferredProvider,
+} from "../services/popup-storage-service.js";
 
 /**
  * Create provider state operations.
@@ -109,6 +115,55 @@ export function createProviderLogic(deps) {
     }
 
     /**
+     * Load MLX provider availability and models via GET /models probe.
+     * @param {number} requestId
+     */
+    async function loadMlxProviderState(requestId) {
+        const preferredModel = await getPreferredModel();
+        const mlxServer = await getMlxServer();
+        if (isStaleProviderStateRequest(requestId)) {
+            return;
+        }
+
+        state.mlxReady = false;
+        setModelOptions(dom.modelSelect, []);
+        setMlxStatus(dom.statusDiv, dom.statusText, false, "Checking MLX provider availability...");
+        refreshControlsAvailability();
+
+        const result = await getMlxModels(mlxServer);
+        if (isStaleProviderStateRequest(requestId)) {
+            return;
+        }
+
+        if (!result.isRunning) {
+            const errorDetail = result.error
+                ? `MLX provider unavailable: ${result.error}`
+                : "MLX provider is unavailable. Start mlx_lm.server and verify endpoint.";
+            setMlxStatus(dom.statusDiv, dom.statusText, false, errorDetail);
+            refreshControlsAvailability();
+            return;
+        }
+
+        if (result.models.length === 0) {
+            state.mlxReady = false;
+            setModelOptions(dom.modelSelect, []);
+            setMlxStatus(dom.statusDiv, dom.statusText, false, "MLX is reachable but /models returned no models.");
+            refreshControlsAvailability();
+            return;
+        }
+
+        state.mlxReady = true;
+        setModelOptions(dom.modelSelect, result.models);
+        const selectedModel = result.models.includes(preferredModel) ? preferredModel : result.models[0];
+        dom.modelSelect.value = selectedModel;
+        if (selectedModel && selectedModel !== preferredModel) {
+            setPreferredModel(selectedModel);
+        }
+        setMlxStatus(dom.statusDiv, dom.statusText, true, `MLX provider available at ${mlxServer}`);
+        refreshControlsAvailability();
+    }
+
+    /**
      * Refresh selected provider state.
      * @param {{allowAutoSwitch: boolean}} options
      */
@@ -117,6 +172,10 @@ export function createProviderLogic(deps) {
         state.providerStateRequestId = requestId;
         if (state.selectedProvider === "chromeBuiltIn") {
             await loadChromeBuiltInProviderState(requestId);
+            return;
+        }
+        if (state.selectedProvider === "mlx") {
+            await loadMlxProviderState(requestId);
             return;
         }
         await loadOllamaProviderState(requestId, options);

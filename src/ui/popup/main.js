@@ -9,9 +9,11 @@ import {
 } from "./components/compose-view.js";
 import { setPromptContext, setResponse } from "./components/response-view.js";
 import {
+    getMlxServer,
     clearTempSelectedText,
     getPreferredProvider,
     getTempSelectedText,
+    setMlxServer,
     setPreferredModel,
     setPreferredProvider,
 } from "./services/popup-storage-service.js";
@@ -29,9 +31,16 @@ async function bootstrapPopup() {
      * Keep controls enabled/disabled based on selected provider state.
      */
     function refreshControlsAvailability() {
-        const providerReady = state.selectedProvider === "chromeBuiltIn" ? state.chromeBuiltInReady : state.ollamaReady;
+        let providerReady = state.ollamaReady;
+        if (state.selectedProvider === "chromeBuiltIn") {
+            providerReady = state.chromeBuiltInReady;
+        } else if (state.selectedProvider === "mlx") {
+            providerReady = state.mlxReady;
+        }
         dom.sendButton.disabled = state.isSending || !providerReady;
-        dom.modelSelect.disabled = state.isSending || state.selectedProvider !== "ollama" || !state.ollamaReady;
+        const modelProvider = state.selectedProvider === "ollama" || state.selectedProvider === "mlx";
+        dom.modelSelect.disabled = state.isSending || !modelProvider || !providerReady;
+        dom.mlxServerInput.disabled = state.isSending || state.selectedProvider !== "mlx";
     }
 
     const providerLogic = createProviderLogic({ dom, state, refreshControlsAvailability });
@@ -47,7 +56,18 @@ async function bootstrapPopup() {
         state.selectedProvider = dom.providerSelect.value;
         setPreferredProvider(state.selectedProvider);
         setModelVisibility(dom.modelField, state.selectedProvider);
+        dom.mlxEndpointField.classList.toggle("is-hidden", state.selectedProvider !== "mlx");
         providerLogic.refreshProviderState({ allowAutoSwitch: false }).catch(console.error);
+    });
+
+    dom.mlxServerInput.addEventListener("change", () => {
+        const nextValue = dom.mlxServerInput.value.trim();
+        const normalizedValue = nextValue || Browserllama.getDefaultMlxServer();
+        dom.mlxServerInput.value = normalizedValue;
+        setMlxServer(normalizedValue);
+        if (state.selectedProvider === "mlx") {
+            providerLogic.refreshProviderState({ allowAutoSwitch: false }).catch(console.error);
+        }
     });
 
     dom.modelSelect.addEventListener("change", () => {
@@ -86,8 +106,10 @@ async function bootstrapPopup() {
     });
 
     state.selectedProvider = await getPreferredProvider();
+    dom.mlxServerInput.value = await getMlxServer();
     dom.providerSelect.value = state.selectedProvider;
     setModelVisibility(dom.modelField, state.selectedProvider);
+    dom.mlxEndpointField.classList.toggle("is-hidden", state.selectedProvider !== "mlx");
     await providerLogic.refreshProviderState({ allowAutoSwitch: true });
 
     const tempSelectedText = await getTempSelectedText();

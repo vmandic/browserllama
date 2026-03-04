@@ -7,6 +7,7 @@ import {
 import { setPromptContext, setResponse } from "../components/response-view.js";
 import { trimPageContext, getActivePageDataWithRetry, isE2EModeEnabled } from "../services/page-context-service.js";
 import { generateWithChromeBuiltIn } from "../providers/chrome-built-in-provider.js";
+import { generateWithMlx } from "../providers/mlx-provider.js";
 import { generateWithOllama } from "../providers/ollama-provider.js";
 
 /**
@@ -95,6 +96,14 @@ export function createPromptLogic(deps) {
                     throw new Error("No Ollama model is available. Install at least one model.");
                 }
             }
+            if (provider === "mlx") {
+                if (!state.mlxReady) {
+                    throw new Error("MLX provider is unavailable. Start mlx_lm.server and verify the endpoint.");
+                }
+                if (!model) {
+                    throw new Error("No MLX model is available. Verify /models returns at least one model.");
+                }
+            }
 
             const pageData = await getActivePageDataWithRetry();
             if (requestState.cancelled) {
@@ -152,6 +161,21 @@ export function createPromptLogic(deps) {
                 if (requestState.cancelled) {
                     throw new Error("Request cancelled.");
                 }
+                const cleanResponse = Browserllama.cleanResponseText(rawResponse);
+                setResponse(dom.responseDiv, cleanResponse || "No response received.", !cleanResponse);
+                completeResponseCycle();
+                return;
+            }
+
+            if (provider === "mlx") {
+                const response = await generateWithMlx(model, fullPrompt);
+                if (requestState.cancelled) {
+                    throw new Error("Request cancelled.");
+                }
+                if (!response || !response.success) {
+                    throw new Error((response && response.error) || "Failed to get response from MLX");
+                }
+                const rawResponse = response && response.data ? response.data.response || "" : "";
                 const cleanResponse = Browserllama.cleanResponseText(rawResponse);
                 setResponse(dom.responseDiv, cleanResponse || "No response received.", !cleanResponse);
                 completeResponseCycle();
