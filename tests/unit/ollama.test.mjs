@@ -11,7 +11,7 @@ const {
   getOffScopeRefusalMessage,
   isLikelyPromptInjection,
   isUnexpectedPromptForWebInterpreter,
-} = require("../../src/lib/ollama.js");
+} = require("../../src/lib/browserllama.js");
 
 describe("ollama helpers", () => {
   it("returns the default server url", () => {
