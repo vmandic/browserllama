@@ -8,6 +8,7 @@ Local-first AI assistant for Chrome pages.
 Browserllama lets you ask questions about the current tab using:
 
 - Ollama running on your machine
+- MLX server (`mlx_lm.server`) running on your machine
 - Chrome built-in AI (when supported by your Chrome build)
 
 ## Docs Hub
@@ -25,8 +26,8 @@ This page includes setup guides, troubleshooting, and FAQ links with section anc
 ## Features
 
 - Prompt against the current page context.
-- Provider switch between Ollama and Chrome built-in AI.
-- Model selection for Ollama providers.
+- Provider switch between Ollama, MLX, and Chrome built-in AI.
+- Model selection for Ollama and MLX providers.
 - Compact popup workflow with prompt/response history.
 - Fallback docs link in the popup header.
 
@@ -36,7 +37,7 @@ Current extension code is organized by feature boundaries and naming conventions
 
 - Providers end with `-provider.js`.
 - Services end with `-service.js`.
-- Prompt steering and injection checks stay centralized in `src/lib/ollama.js`.
+- Prompt steering and injection checks stay centralized in `src/lib/browserllama.js`.
 
 ```text
 src/	- extension source root
@@ -44,11 +45,13 @@ src/	- extension source root
 ├── background/	- background service modules
 │   ├── storage-service.js	- reads synced extension preferences
 │   ├── ollama-service.js	- Ollama HTTP calls and response normalization
+│   ├── mlx-service.js	- MLX OpenAI-compatible HTTP calls and response normalization
 │   ├── icon-status-service.js	- action icon/title status updates
 │   ├── tab-context-service.js	- active-tab tracking and text extraction
 │   └── message-router-service.js	- runtime message action routing
 ├── lib/
-│   └── ollama.js	- shared prompt building, guardrails, injection checks, response cleaning
+│   ├── browserllama.js	- shared prompt building, guardrails, injection checks, response cleaning
+│   └── ollama.js	- deprecated compatibility alias to browserllama shared helpers
 └── ui/
     └── popup/	- popup UI entry and modules
         ├── popup.html	- popup markup entry
@@ -65,6 +68,7 @@ src/	- extension source root
         │   └── provider-logic.js	- provider readiness orchestration
         ├── providers/
         │   ├── chrome-built-in-provider.js	- Chrome built-in generation API integration
+        │   ├── mlx-provider.js	- MLX generation/model API integration
         │   └── ollama-provider.js	- Ollama generation/model API integration
         └── services/
             ├── page-context-service.js	- active-page capture helpers
@@ -72,7 +76,8 @@ src/	- extension source root
 
 tests/	- automated test suites
 ├── unit/
-│   └── ollama.test.mjs	- shared helper and guardrail unit tests
+│   ├── ollama.test.mjs	- Ollama/helper behavior unit tests
+│   └── mlx.test.mjs	- MLX default endpoint unit test
 └── e2e/
     └── extension.spec.js	- end-to-end extension flow tests
 ```
@@ -113,7 +118,26 @@ ollama pull deepseek-r1:8b
 
 4. Open Browserllama popup and keep provider on **Ollama**.
 
-#### Option B: Chrome built-in AI
+#### Option B: MLX (Apple Silicon optimized)
+
+1. Install MLX runtime:
+
+```bash
+brew install pipx
+pipx ensurepath
+pipx install mlx-lm
+```
+
+2. Start an MLX server:
+
+```bash
+mlx_lm.server --model mlx-community/Qwen2.5-7B-Instruct-4bit
+```
+
+3. Open Browserllama popup and select provider **MLX (OpenAI-compatible)**.
+4. Keep endpoint as default `http://localhost:8080/v1` unless you changed MLX host/port.
+
+#### Option C: Chrome built-in AI
 
 1. Use a compatible Chrome build and account setup.
 2. Enable required AI-related flags in `chrome://flags`.
@@ -125,7 +149,10 @@ If the provider is unavailable, see the docs hub troubleshooting section:
 
 ## Configuration Notes
 
-Browserllama defaults to `http://localhost:11434` for Ollama.
+Browserllama defaults to:
+
+- Ollama: `http://localhost:11434`
+- MLX: `http://localhost:8080/v1`
 
 If you use `ollama serve` and need to allow extension origins, set environment vars (example):
 
