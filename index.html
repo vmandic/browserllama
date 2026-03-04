@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browserllama | Local AI in Your Browser</title>
-    <meta name="description" content="Browserllama brings local AI chat to Chrome with Ollama or Chrome built-in AI. Follow setup, troubleshooting, and FAQ guides.">
+    <meta name="description" content="Browserllama brings local AI chat to Chrome with Ollama, MLX, or Chrome built-in AI. Follow setup, troubleshooting, and FAQ guides.">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#0f172a">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Browserllama | Local AI in Your Browser">
-    <meta property="og:description" content="Install Browserllama, connect to Ollama, and troubleshoot local AI setup issues quickly.">
+    <meta property="og:description" content="Install Browserllama, connect to Ollama or MLX, and troubleshoot local AI setup issues quickly.">
     <meta property="og:url" content="https://vmandic.github.io/browserllama/">
     <meta property="og:site_name" content="Browserllama">
     <meta name="twitter:card" content="summary_large_image">
@@ -309,7 +309,7 @@
             <h1>Use local AI in Chrome with Browserllama</h1>
             <p>
                 Browserllama lets you ask questions about the current page using local models.
-                Use Ollama for full local control, or switch to Chrome built-in AI on supported builds.
+                Use Ollama or MLX for full local control, or switch to Chrome built-in AI on supported builds.
             </p>
             <div class="hero-cta">
                 <a class="btn btn-primary" href="#setup">Start Setup</a>
@@ -335,11 +335,11 @@
                 </article>
                 <article class="card">
                     <h3>Provider choice</h3>
-                    <p>Switch between Ollama and Chrome built-in AI directly from the popup.</p>
+                    <p>Switch between Ollama, MLX, and Chrome built-in AI directly from the popup.</p>
                 </article>
                 <article class="card">
                     <h3>Model selection</h3>
-                    <p>Pick your local Ollama model in popup settings and keep your preferred default.</p>
+                    <p>Pick your local Ollama or MLX model in popup settings and keep your preferred default.</p>
                 </article>
                 <article class="card">
                     <h3>Fast fallback docs</h3>
@@ -350,7 +350,8 @@
 
         <section class="section" id="setup">
             <h2><a class="anchor" href="#setup">Setup</a></h2>
-            <p class="lead">Basic install for Browserllama with Ollama (recommended default path).</p>
+            <p class="lead">Choose one provider path (Ollama, MLX, or Chrome built-in AI).</p>
+            <h3 id="setup-ollama"><a class="anchor" href="#setup-ollama">Option A: Ollama</a></h3>
             <ol class="steps">
                 <li>Install Ollama from <a href="https://ollama.com" target="_blank" rel="noopener noreferrer">ollama.com</a>.</li>
                 <li>Start the server with the app or run <code>ollama serve</code>.</li>
@@ -358,8 +359,21 @@
                 <li>Load extension source from <code>src/</code> in <code>chrome://extensions</code> with Developer Mode enabled.</li>
                 <li>Open Browserllama popup, keep provider on Ollama, and send a test prompt.</li>
             </ol>
+            <h3 id="setup-mlx"><a class="anchor" href="#setup-mlx">Option B: MLX</a></h3>
+            <ol class="steps">
+                <li>Install MLX runtime: <code>brew install pipx</code>, <code>pipx ensurepath</code>, <code>pipx install mlx-lm</code>.</li>
+                <li>Start server, for example: <code>mlx_lm.server --model mlx-community/Qwen2.5-7B-Instruct-4bit</code>.</li>
+                <li>Default endpoint is <code>http://localhost:8080/v1</code> (change popup endpoint only if you run a custom host/port).</li>
+                <li>Open Browserllama popup and select provider <strong>MLX (OpenAI-compatible)</strong>.</li>
+            </ol>
+            <h3 id="setup-chrome-ai"><a class="anchor" href="#setup-chrome-ai">Option C: Chrome built-in AI</a></h3>
+            <ol class="steps">
+                <li>Use a compatible Chrome build/channel and account setup.</li>
+                <li>Enable current built-in AI flags in <code>chrome://flags</code>.</li>
+                <li>Relaunch Chrome and select provider <strong>Chrome built-in AI</strong> in popup.</li>
+            </ol>
             <div class="tip">
-                If your popup says Ollama is unreachable, jump to <a href="#troubleshooting-ollama-unreachable">Ollama troubleshooting</a>.
+                If your popup says provider is unreachable, jump to <a href="#troubleshooting">Troubleshooting</a>.
             </div>
         </section>
 
@@ -383,6 +397,15 @@
                 <li>Retry from popup after selecting the same model in the dropdown.</li>
             </ol>
 
+            <h3 id="troubleshooting-mlx-unreachable"><a class="anchor" href="#troubleshooting-mlx-unreachable">MLX provider is not reachable</a></h3>
+            <ol class="steps">
+                <li>Confirm MLX is installed: run <code>mlx_lm.generate --help</code>.</li>
+                <li>Start server: <code>mlx_lm.server --model mlx-community/Qwen2.5-7B-Instruct-4bit</code>.</li>
+                <li>Verify endpoint: open <code>http://localhost:8080/v1/models</code> in your browser.</li>
+                <li>In popup, select provider <strong>MLX (OpenAI-compatible)</strong> and confirm endpoint matches your server.</li>
+                <li>If server runs on custom host/port, update popup MLX endpoint (for example <code>http://localhost:9000/v1</code>).</li>
+            </ol>
+
             <h3 id="troubleshooting-chrome-ai"><a class="anchor" href="#troubleshooting-chrome-ai">Chrome built-in AI provider is unavailable</a></h3>
             <ol class="steps">
                 <li>Use a Chrome build/channel that supports built-in AI APIs in your region and account setup.</li>
@@ -404,7 +427,7 @@
             <p>A Chrome extension that lets you ask AI questions about the active page using local providers.</p>
 
             <h3 id="faq-do-i-need-ollama"><a class="anchor" href="#faq-do-i-need-ollama">Do I need Ollama to use it?</a></h3>
-            <p>Not always. You can use Ollama (default) or switch to Chrome built-in AI if your Chrome supports it.</p>
+            <p>Not always. You can use Ollama, MLX, or switch to Chrome built-in AI if your Chrome supports it.</p>
 
             <h3 id="faq-how-do-i-install-ollama"><a class="anchor" href="#faq-how-do-i-install-ollama">How do I install Ollama quickly?</a></h3>
             <p>Install from <a href="https://ollama.com" target="_blank" rel="noopener noreferrer">ollama.com</a>, run <code>ollama serve</code>, then pull a model like <code>ollama pull deepseek-r1:8b</code>.</p>
@@ -413,7 +436,10 @@
             <p>Load the <code>src/</code> folder from this repository in <code>chrome://extensions</code>.</p>
 
             <h3 id="faq-why-no-response"><a class="anchor" href="#faq-why-no-response">Why do I get no response?</a></h3>
-            <p>Check provider status in popup first, then verify Ollama server/model readiness or Chrome built-in AI availability.</p>
+            <p>Check provider status in popup first, then verify Ollama/MLX server + model readiness or Chrome built-in AI availability.</p>
+
+            <h3 id="faq-mlx-endpoint"><a class="anchor" href="#faq-mlx-endpoint">What is the default MLX endpoint?</a></h3>
+            <p><code>http://localhost:8080/v1</code>. Browserllama probes availability with <code>GET /models</code> and uses <code>POST /chat/completions</code>.</p>
 
             <h3 id="faq-chrome-flags"><a class="anchor" href="#faq-chrome-flags">Which Chrome experiments should I enable for local AI?</a></h3>
             <p>Enable current built-in AI related flags in <code>chrome://flags</code>, then relaunch and retest. Names vary by Chrome version, so search by keyword.</p>
