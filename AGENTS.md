@@ -21,6 +21,8 @@ This file defines project-level AI conventions and should be respected by any co
 - **Backlog** (`.llm/backlog/`) – project task specs grouped by type:
   - Subdirs: `bugs/`, `feats/`, `chores/`, `llm/`, `tech/` plus `.llm/backlog/README.md` describing the format.
 - **Lessons** (`.llm/lessons/`) – reusable implementation learnings captured from user chats and prompts when it is useful for future agents.
+  - Read lessons selectively when they are relevant to the current task and likely to improve outcomes.
+  - Be careful not to pollute context: avoid loading unrelated lessons and prefer concise extraction of only actionable points.
   - Use the `create_lesson` skill (`.llm/skills/create_lesson/SKILL.md`) for filename conventions, required sections, and validation rules.
 
 ## Cursor integration (symlinks)
