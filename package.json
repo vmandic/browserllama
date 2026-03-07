@@ -8,7 +8,8 @@
     "test": "pnpm run test:unit",
     "test:unit": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "publish:extension": "./scripts/publish.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.41.2",
