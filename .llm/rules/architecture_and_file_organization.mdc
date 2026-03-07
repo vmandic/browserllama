@@ -48,3 +48,12 @@ Use this rule for all extension code changes so structure stays consistent and s
 - When file organization changes, update `README.md` structure documentation.
 - Keep e2e popup path usage aligned with `src/manifest.json` `action.default_popup`.
 - Preserve or update unit tests that validate prompt guardrail behavior.
+
+## Tests layout
+
+- Keep automated tests under the `tests/` root with this layout:
+  - `tests/unit/` – Vitest unit tests for `src/` modules.
+  - `tests/e2e/` – Playwright end-to-end specs for extension flows.
+  - `tests/shared/` – shared helpers and fixtures reused by tests (for example, HTML fixtures under `tests/shared/fixtures/` and e2e helpers under `tests/shared/e2e/`).
+- Treat this layout as the expected default; if you change where tests live, update this rule and the `README.md` tree so they stay in sync.
+- See also: `.llm/rules/testing.mdc` for when and how to run tests.

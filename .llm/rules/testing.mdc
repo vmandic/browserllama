@@ -26,3 +26,15 @@ This rule defines when to run tests and how to report results so test-related be
 ## Dependencies
 
 - Do **not** add new test frameworks, runners, or testing dependencies unless the user explicitly asks. Prefer existing Vitest (unit) and Playwright (e2e) setup.
+
+## Test layout and style
+
+- Tests live under the `tests/` root:
+  - `tests/unit/` for Vitest unit tests.
+  - `tests/e2e/` for Playwright specs.
+  - `tests/shared/` for helpers and fixtures that can be reused across suites.
+- Prefer routing/mocking external services (for example, Ollama and MLX HTTP endpoints) in tests instead of talking to real local servers when possible. This makes runs more reliable, especially in headless environments, and avoids depending on a specific local model configuration.
+- Use Playwright's `context.route()` to stub network calls in e2e tests when you only care about the extension's behavior, not the actual model output (for example, returning a fixed JSON payload for an Ollama `/api/generate` call).
+- Put reusable e2e helpers under `tests/shared/e2e/` and shared HTML/text fixtures under `tests/shared/fixtures/`, then import them from individual tests instead of duplicating logic.
+- Unit tests may also import helpers from `tests/shared/` when it keeps them DRY and does not pull in browser-only dependencies.
+- See also: `.llm/rules/architecture_and_file_organization.mdc` for the expected tests directory structure.

@@ -76,10 +76,19 @@ src/	- extension source root
 
 tests/	- automated test suites
 ├── unit/
-│   ├── ollama.test.mjs	- Ollama/helper behavior unit tests
-│   └── mlx.test.mjs	- MLX default endpoint unit test
-└── e2e/
-    └── extension.spec.js	- end-to-end extension flow tests
+│   ├── ollama.test.mjs	- Ollama/shared helper behavior unit tests
+│   ├── mlx.test.mjs	- MLX default endpoint unit test
+│   └── background-mlx-service.test.mjs	- background MLX fallback behavior unit tests
+├── e2e/	- Playwright extension flow tests
+│   ├── popup-basic.spec.js	- popup smoke test
+│   ├── provider-ollama.spec.js	- Ollama provider and fallback flows
+│   ├── provider-chrome-built-in.spec.js	- Chrome built-in provider flows
+│   └── provider-mlx.spec.js	- MLX provider flows
+└── shared/
+    ├── fixtures/
+    │   └── lorem.html	- e2e fixture page content
+    └── e2e/
+        └── extension-context.js	- shared Playwright MV3 extension launch helpers
 ```
 
 ## Quick Start
