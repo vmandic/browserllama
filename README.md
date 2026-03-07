@@ -2,7 +2,6 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![Tests](https://img.shields.io/badge/tests-vitest%20%2B%20playwright-0ea5a6)](#testing)
-[![Chrome Extension](https://img.shields.io/badge/chrome-extension-MV3-1d4ed8)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 
 Local-first AI assistant for Chrome pages.
 Browserllama lets you ask questions about the current tab using:
