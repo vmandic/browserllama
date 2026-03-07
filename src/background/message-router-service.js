@@ -36,7 +36,8 @@
                 }
 
                 if (request.action === "getMlxModels") {
-                    fetchMlxModels(request.server)
+                    Promise.resolve()
+                        .then(() => fetchMlxModels(request.server))
                         .then((result) => sendResponse(result))
                         .catch((error) => {
                             sendResponse({
@@ -72,7 +73,8 @@
                 }
 
                 if (request.action === "generateMlxResponse") {
-                    generateWithMlx(request.model, request.prompt)
+                    Promise.resolve()
+                        .then(() => generateWithMlx(request.model, request.prompt))
                         .then((data) => sendResponse({ success: true, data }))
                         .catch((error) => {
                             console.error("Error:", error);

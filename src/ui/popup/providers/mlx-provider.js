@@ -6,6 +6,14 @@
 export async function getMlxModels(server = null) {
     const response = await new Promise((resolve) => {
         chrome.runtime.sendMessage({ action: "getMlxModels", server }, function(modelsResponse) {
+            if (chrome.runtime.lastError) {
+                resolve({
+                    isRunning: false,
+                    models: [],
+                    error: chrome.runtime.lastError.message || "Background process did not respond",
+                });
+                return;
+            }
             resolve(modelsResponse);
         });
     });
@@ -34,6 +42,13 @@ export async function generateWithMlx(model, prompt) {
             model,
             prompt,
         }, function(messageResponse) {
+            if (chrome.runtime.lastError) {
+                resolve({
+                    success: false,
+                    error: chrome.runtime.lastError.message || "Background process did not respond",
+                });
+                return;
+            }
             resolve(messageResponse);
         });
     });
