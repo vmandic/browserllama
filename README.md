@@ -188,6 +188,12 @@ Install Chromium for Playwright (first run only):
 pnpm exec playwright install chromium
 ```
 
+Pre-flight checks:
+
+1. Start Ollama locally and confirm it responds at `http://localhost:11434`.
+2. Confirm MLX (`mlx_lm.server`) is running and responding at the configured endpoint.
+3. Verify required Chrome flags for MV3/e2e are enabled for your test profile.
+
 Run e2e (headed):
 
 ```bash
