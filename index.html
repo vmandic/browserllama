@@ -105,34 +105,30 @@
 
         .github-corner {
             position: fixed;
-            top: 0;
-            right: 0;
-            border: 0;
+            top: 12px;
+            right: 12px;
             z-index: 6;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: #0f172a;
+            color: #ffffff;
+            display: grid;
+            place-items: center;
+            text-decoration: none;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.24);
         }
 
         .github-corner svg {
+            width: 20px;
+            height: 20px;
             display: block;
+            fill: currentColor;
         }
 
-        .github-corner:hover .octo-arm,
-        .github-corner:focus-visible .octo-arm {
-            animation: octo-wave 560ms ease-in-out;
-        }
-
-        @keyframes octo-wave {
-            0%,
-            100% {
-                transform: rotate(0);
-            }
-            20%,
-            60% {
-                transform: rotate(-25deg);
-            }
-            40%,
-            80% {
-                transform: rotate(10deg);
-            }
+        .github-corner:focus-visible,
+        .github-corner:hover {
+            background: #115e59;
         }
 
         .hero {
@@ -322,7 +318,11 @@
             }
 
             .github-corner {
-                display: none;
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                top: 10px;
+                right: 10px;
             }
         }
     </style>
@@ -344,10 +344,8 @@
     </header>
 
     <a class="github-corner" href="https://github.com/vmandic/browserllama" target="_blank" rel="noopener noreferrer" aria-label="Fork Browserllama on GitHub">
-        <svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true">
-            <path d="M0,0 L250,0 L250,250 Z" fill="#0f172a"></path>
-            <path d="M128,109 C113,99 119,89 119,89 C122,82 120,78 120,78 C119,72 114,76 114,76 C110,79 110,83 110,83 C105,95 117,102 117,102 C123,105 126,108 128,109 Z" fill="#0f1a2b" class="octo-arm" style="transform-origin: 130px 106px;"></path>
-            <path d="M115,115 C110,112 106,111 103,112 C103,112 99,113 98,120 C98,120 96,128 106,132 C106,132 114,136 118,142 C118,142 123,148 132,150 C132,150 150,154 162,146 C162,146 169,141 172,134 C172,134 176,123 168,115 C168,115 162,109 151,109 C151,109 142,109 137,112 C137,112 133,114 132,114 C132,114 126,112 122,112 C122,112 118,112 115,115 Z" fill="#ffffff" class="octo-body"></path>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.73 0 8.34c0 3.68 2.29 6.8 5.47 7.9.4.08.55-.18.55-.4 0-.2-.01-.86-.01-1.56-2.01.38-2.53-.51-2.69-.99-.09-.25-.48-.99-.82-1.19-.28-.15-.68-.52-.01-.53.63-.01 1.08.6 1.23.85.72 1.26 1.87.9 2.33.68.07-.54.28-.9.51-1.1-1.78-.2-3.64-.93-3.64-4.14 0-.91.31-1.65.82-2.23-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.84.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.06 2.2-.84 2.2-.84.44 1.1.16 1.92.08 2.12.51.58.82 1.32.82 2.23 0 3.22-1.87 3.94-3.65 4.14.29.26.54.77.54 1.56 0 1.12-.01 2.02-.01 2.3 0 .22.15.48.55.4 3.18-1.1 5.47-4.22 5.47-7.9C16 3.73 12.42 0 8 0z"></path>
         </svg>
     </a>
 
