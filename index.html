@@ -103,6 +103,38 @@
             color: var(--brand-strong);
         }
 
+        .fork-ribbon {
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 20;
+            width: 140px;
+            height: 140px;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .fork-ribbon a {
+            position: absolute;
+            top: 24px;
+            right: -36px;
+            transform: rotate(45deg);
+            background: #0f172a;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 8px 44px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28);
+            pointer-events: auto;
+        }
+
+        .fork-ribbon a:focus-visible,
+        .fork-ribbon a:hover {
+            background: #115e59;
+        }
+
         .hero {
             margin-top: 32px;
             background: linear-gradient(135deg, #0f766e 0%, #0f172a 68%);
@@ -302,9 +334,14 @@
                 <a href="#setup">Setup</a>
                 <a href="#troubleshooting">Troubleshooting</a>
                 <a href="#faq">FAQ</a>
+                <a href="https://github.com/vmandic/browserllama" target="_blank" rel="noopener noreferrer">GitHub</a>
             </nav>
         </div>
     </header>
+
+    <div class="fork-ribbon" aria-hidden="true">
+        <a href="https://github.com/vmandic/browserllama" target="_blank" rel="noopener noreferrer">Fork me</a>
+    </div>
 
     <main class="shell">
         <section class="hero" id="overview">
