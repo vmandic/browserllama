@@ -105,29 +105,33 @@
 
         .github-corner {
             position: fixed;
-            top: 12px;
-            right: 12px;
+            top: 0;
+            right: 0;
             z-index: 30;
-            width: 38px;
-            height: 38px;
-            border-radius: 12px;
+            width: 180px;
+            height: 180px;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .github-corner span {
+            position: absolute;
+            top: 36px;
+            right: -54px;
+            transform: rotate(45deg);
             background: #0f172a;
             color: #ffffff;
-            display: grid;
-            place-items: center;
             text-decoration: none;
+            padding: 10px 74px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
             box-shadow: 0 10px 22px rgba(15, 23, 42, 0.24);
+            pointer-events: auto;
         }
 
-        .github-corner svg {
-            width: 20px;
-            height: 20px;
-            display: block;
-            fill: currentColor;
-        }
-
-        .github-corner:focus-visible,
-        .github-corner:hover {
+        .github-corner span:focus-visible,
+        .github-corner span:hover {
             background: #115e59;
         }
 
@@ -318,11 +322,7 @@
             }
 
             .github-corner {
-                width: 34px;
-                height: 34px;
-                border-radius: 10px;
-                top: 10px;
-                right: 10px;
+                display: none;
             }
         }
     </style>
@@ -344,9 +344,7 @@
     </header>
 
     <a class="github-corner" href="https://github.com/vmandic/browserllama" target="_blank" rel="noopener noreferrer" aria-label="Fork Browserllama on GitHub">
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M8 0C3.58 0 0 3.73 0 8.34c0 3.68 2.29 6.8 5.47 7.9.4.08.55-.18.55-.4 0-.2-.01-.86-.01-1.56-2.01.38-2.53-.51-2.69-.99-.09-.25-.48-.99-.82-1.19-.28-.15-.68-.52-.01-.53.63-.01 1.08.6 1.23.85.72 1.26 1.87.9 2.33.68.07-.54.28-.9.51-1.1-1.78-.2-3.64-.93-3.64-4.14 0-.91.31-1.65.82-2.23-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.84.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.06 2.2-.84 2.2-.84.44 1.1.16 1.92.08 2.12.51.58.82 1.32.82 2.23 0 3.22-1.87 3.94-3.65 4.14.29.26.54.77.54 1.56 0 1.12-.01 2.02-.01 2.3 0 .22.15.48.55.4 3.18-1.1 5.47-4.22 5.47-7.9C16 3.73 12.42 0 8 0z"></path>
-        </svg>
+        <span>Fork me</span>
     </a>
 
     <main class="shell">
